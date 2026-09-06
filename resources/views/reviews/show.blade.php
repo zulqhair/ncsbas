@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-start mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
         <div>
             <a class="text-decoration-none" href="{{ route('reviews.index') }}">&larr; Reviewer Module</a>
             <h1 class="h2 mt-2 mb-1">Review Assessment #{{ $assessment->id }}</h1>
@@ -66,7 +66,7 @@
                         Mark completed
                     </button>
                 </form>
-                <form class="d-flex gap-2" method="POST" action="{{ route('reviews.update', $review) }}">
+                <form class="d-flex flex-wrap gap-2" method="POST" action="{{ route('reviews.update', $review) }}">
                     @csrf
                     @method('PATCH')
                     <input type="hidden" name="action" value="decline">
@@ -117,8 +117,8 @@
                 <div class="border-bottom pb-3 mb-3">
                     <h2 class="h6">{{ $number }}. {{ $questions->first()->element_name }}</h2>
                     @foreach($questions as $question)
-                        <div class="d-flex justify-content-between gap-3 py-2">
-                            <span>{{ $question->number }}. {{ $question->question }}</span>
+                        <div class="d-flex justify-content-between gap-3 py-2 response-row">
+                            <span class="text-break">{{ $question->number }}. {{ $question->question }}</span>
                             <strong>{{ $answers[$question->id] ?? 'Not answered' }}</strong>
                         </div>
                     @endforeach
@@ -140,9 +140,9 @@
                 <p class="text-secondary">No comments yet.</p>
             @endforelse
 
-            <form class="d-flex gap-2 mt-3" method="POST" action="{{ route('reviews.comments', $review) }}">
+            <form class="d-flex flex-wrap gap-2 mt-3" method="POST" action="{{ route('reviews.comments', $review) }}">
                 @csrf
-                <input class="form-control" name="body" placeholder="Leave a review comment" required>
+                <input class="form-control flex-grow-1" name="body" placeholder="Leave a review comment" required>
                 <button class="btn btn-outline-secondary">Comment</button>
             </form>
         </div>

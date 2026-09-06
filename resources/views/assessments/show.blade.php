@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-start mb-3">
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
     <div>
         <h1 class="h2 mb-1">Assessment #{{ $assessment->id }}</h1>
         <p class="text-secondary mb-0">
@@ -150,7 +150,7 @@
 
 @foreach($assessment->reviews as $review)
     <div class="card mb-3">
-        <div class="card-header d-flex justify-content-between">
+        <div class="card-header d-flex flex-wrap justify-content-between gap-2">
             <strong>Review by {{ $review->reviewer?->name ?? 'Unassigned' }}</strong>
             <span class="badge text-bg-info">{{ ucfirst($review->status) }}</span>
         </div>
@@ -173,7 +173,7 @@
                         <input type="hidden" name="action" value="complete">
                         <button class="btn btn-sm btn-primary">Mark completed</button>
                     </form>
-                    <form class="d-flex gap-1" method="POST" action="{{ route('reviews.update', $review) }}">
+                    <form class="d-flex flex-wrap gap-1" method="POST" action="{{ route('reviews.update', $review) }}">
                         @csrf
                         @method('PATCH')
                         <input type="hidden" name="action" value="decline">
@@ -202,9 +202,9 @@
             @if(auth()->id() === $review->reviewer_id
                 || auth()->user()->isAdmin()
                 || auth()->id() === $assessment->user_id)
-                <form class="d-flex gap-2" method="POST" action="{{ route('reviews.comments', $review) }}">
+                <form class="d-flex flex-wrap gap-2" method="POST" action="{{ route('reviews.comments', $review) }}">
                     @csrf
-                    <input class="form-control" name="body" placeholder="Leave a comment" required>
+                    <input class="form-control flex-grow-1" name="body" placeholder="Leave a comment" required>
                     <button class="btn btn-outline-secondary">Comment</button>
                 </form>
             @endif

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="d-flex justify-content-between mb-4">
+    <div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
         <div>
             <h1 class="h2">Assessments</h1>
             <p class="text-secondary">

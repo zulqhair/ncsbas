@@ -8,8 +8,8 @@
 </head>
 <body class="bg-light">
     @auth
-        <div class="d-flex min-vh-100">
-            <aside class="bg-primary text-white d-flex flex-column p-3 shadow" style="width: 250px;">
+        <div class="app-shell min-vh-100">
+            <aside class="app-sidebar bg-primary text-white d-flex flex-column p-3 shadow">
                 <a class="text-white text-decoration-none fs-4 fw-bold mb-4" href="{{ route('dashboard') }}">
                     NCSBAS
                 </a>
@@ -56,7 +56,7 @@
                 </form>
             </aside>
 
-            <main class="flex-grow-1 py-4">
+            <main class="app-main flex-grow-1 py-4">
                 <div class="container-fluid px-4">
                     @if(session('status'))
                         <div class="alert alert-success">{{ session('status') }}</div>

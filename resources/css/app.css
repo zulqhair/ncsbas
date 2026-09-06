@@ -10,6 +10,28 @@ body {
     color: var(--ncsbas-ink);
 }
 
+.app-shell {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-sidebar {
+    width: 100%;
+}
+
+.app-sidebar .nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.app-main {
+    min-width: 0;
+}
+
+.response-row span {
+    min-width: 0;
+}
+
 .dashboard-stat,
 .dashboard-chart-card {
     border: 0;
@@ -39,4 +61,38 @@ body {
 
 .chart-container-lg {
     min-height: 720px;
+}
+
+@media (min-width: 768px) {
+    .app-shell {
+        flex-direction: row;
+    }
+
+    .app-sidebar {
+        width: 250px;
+        min-height: 100vh;
+        flex: 0 0 250px;
+        position: sticky;
+        top: 0;
+    }
+
+    .app-sidebar .nav {
+        flex-direction: column;
+        flex-wrap: nowrap;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .app-sidebar .nav-link {
+        flex: 1 1 auto;
+        text-align: center;
+    }
+
+    .app-sidebar form.mt-auto {
+        margin-top: 1rem !important;
+    }
+
+    .chart-container-lg {
+        min-height: 620px;
+    }
 }

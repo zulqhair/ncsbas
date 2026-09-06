@@ -80,6 +80,11 @@ class AssessmentReviewWorkflowTest extends TestCase
             ->post('/reviews/'.$review->id.'/comments', ['body' => 'Please confirm the evidence.'])
             ->assertSessionHas('status');
         $this->assertDatabaseHas('review_comments', ['review_id' => $review->id, 'body' => 'Please confirm the evidence.']);
+        $this->actingAs($reviewer)
+            ->get('/reviews/'.$review->id)
+            ->assertOk()
+            ->assertSee('Please confirm the evidence.')
+            ->assertSee($reviewer->name);
         $this->actingAs($reviewer)->patch('/reviews/'.$review->id, ['action' => 'complete'])->assertSessionHas('status');
         $this->assertDatabaseHas('reviews', ['id' => $review->id, 'status' => 'completed']);
         $this->assertDatabaseHas('assessments', ['id' => $assessment->id, 'status' => 'completed']);
