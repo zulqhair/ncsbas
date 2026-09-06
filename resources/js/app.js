@@ -145,8 +145,74 @@ function renderDashboardCharts() {
     });
 }
 
+function setupSequentialQuestionnaire() {
+    const form = document.querySelector('[data-sequential-questionnaire]');
+
+    if (! form) {
+        return;
+    }
+
+    const rowsByElement = [...form.querySelectorAll('[data-questionnaire-row]')]
+        .reduce((groups, row) => {
+            const element = row.dataset.element;
+            groups[element] ??= [];
+            groups[element].push(row);
+
+            return groups;
+        }, {});
+
+    Object.values(rowsByElement).forEach((rows) => {
+        const refreshRows = () => {
+            let blockedReason = null;
+
+            rows.forEach((row) => {
+                const inputs = [...row.querySelectorAll('.questionnaire-input')];
+                const note = row.querySelector('[data-questionnaire-note]');
+                const blocked = blockedReason !== null;
+
+                row.classList.toggle('opacity-50', blocked);
+                inputs.forEach((input) => {
+                    input.disabled = blocked;
+                    if (blocked) {
+                        input.checked = false;
+                    }
+                });
+
+                if (blocked) {
+                    note.textContent = blockedReason === 'no'
+                        ? 'Skipped because an earlier question in this element was answered No.'
+                        : 'Answer the previous question Yes to continue.';
+                    note.classList.remove('d-none');
+                } else {
+                    note.textContent = '';
+                    note.classList.add('d-none');
+                }
+
+                const selected = row.querySelector('.questionnaire-input:checked')?.value;
+                if (! blocked) {
+                    blockedReason = selected === 'No'
+                        ? 'no'
+                        : (selected === 'Yes' ? null : 'incomplete');
+                }
+            });
+        };
+
+        rows.forEach((row) => {
+            row.querySelectorAll('.questionnaire-input').forEach((input) => {
+                input.addEventListener('change', refreshRows);
+            });
+        });
+
+        refreshRows();
+    });
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', renderDashboardCharts);
+    document.addEventListener('DOMContentLoaded', () => {
+        renderDashboardCharts();
+        setupSequentialQuestionnaire();
+    });
 } else {
     renderDashboardCharts();
+    setupSequentialQuestionnaire();
 }

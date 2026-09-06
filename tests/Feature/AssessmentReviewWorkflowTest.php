@@ -48,6 +48,74 @@ class AssessmentReviewWorkflowTest extends TestCase
             ->assertDownload('ncsbas-assessment-'.$assessment->id.'.pdf');
     }
 
+    public function test_no_answer_skips_the_remaining_questions_in_that_element(): void
+    {
+        $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
+        $questions = collect([
+            [1, 1],
+            [2, 1],
+            [3, 1],
+            [4, 2],
+        ])->mapWithKeys(function (array $question): array {
+            [$number, $element] = $question;
+
+            return [
+                $number => NcsbQuestion::create([
+                    'number' => $number,
+                    'domain' => 'Governance',
+                    'category' => 'Test',
+                    'element_number' => $element,
+                    'element_name' => 'Element '.$element,
+                    'question' => 'Question '.$number,
+                ]),
+            ];
+        });
+
+        $this->actingAs($assessor)->post('/assessments')->assertRedirect();
+        $assessment = Assessment::firstOrFail();
+
+        $this->actingAs($assessor)
+            ->put('/assessments/'.$assessment->id, [
+                'answers' => [
+                    $questions[1]->id => 'No',
+                    $questions[2]->id => 'Yes',
+                ],
+            ])
+            ->assertSessionHasErrors();
+
+        $this->assertDatabaseMissing('assessment_responses', [
+            'assessment_id' => $assessment->id,
+        ]);
+
+        $this->actingAs($assessor)
+            ->put('/assessments/'.$assessment->id, [
+                'answers' => [
+                    $questions[1]->id => 'No',
+                    $questions[4]->id => 'Yes',
+                ],
+            ])
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('assessment_responses', [
+            'assessment_id' => $assessment->id,
+            'ncsb_question_id' => $questions[1]->id,
+            'answer' => 'No',
+        ]);
+        $this->assertDatabaseHas('assessment_responses', [
+            'assessment_id' => $assessment->id,
+            'ncsb_question_id' => $questions[4]->id,
+            'answer' => 'Yes',
+        ]);
+        $this->assertDatabaseMissing('assessment_responses', [
+            'assessment_id' => $assessment->id,
+            'ncsb_question_id' => $questions[2]->id,
+        ]);
+        $this->assertDatabaseMissing('assessment_responses', [
+            'assessment_id' => $assessment->id,
+            'ncsb_question_id' => $questions[3]->id,
+        ]);
+    }
+
     public function test_only_assigned_reviewer_can_open_assessment_and_complete_review(): void
     {
         $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);

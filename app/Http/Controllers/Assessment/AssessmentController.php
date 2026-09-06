@@ -79,13 +79,70 @@ class AssessmentController extends Controller
             422,
             'This assessment is locked after review is requested.'
         );
-        foreach ($request->input('answers', []) as $id => $answer) {
-            if (in_array($answer, ['Yes', 'No'], true)) {
-                AssessmentResponse::updateOrCreate(
-                    ['assessment_id' => $assessment->id, 'ncsb_question_id' => $id],
-                    ['answer' => $answer]
-                );
+        $questions = NcsbQuestion::query()->orderBy('number')->get();
+        $submittedAnswers = $request->input('answers', []);
+        $submittedAnswers = is_array($submittedAnswers) ? $submittedAnswers : [];
+        $questionIds = $questions->mapWithKeys(
+            fn (NcsbQuestion $question): array => [(string) $question->id => $question]
+        );
+        $answers = [];
+        $errors = [];
+
+        foreach ($submittedAnswers as $id => $answer) {
+            $question = $questionIds->get((string) $id);
+            if (! $question) {
+                $errors[] = 'One or more submitted questions are invalid.';
+
+                continue;
             }
+            if (! in_array($answer, ['Yes', 'No'], true)) {
+                $errors[] = 'Each response must be Yes or No.';
+
+                continue;
+            }
+
+            $answers[(string) $question->id] = $answer;
+        }
+
+        foreach ($questions->groupBy('element_number') as $elementQuestions) {
+            $blockedReason = null;
+
+            foreach ($elementQuestions as $question) {
+                $answer = $answers[(string) $question->id] ?? null;
+
+                if ($blockedReason !== null) {
+                    if ($answer !== null) {
+                        $errors[] = $blockedReason === 'no'
+                            ? "Question {$question->number} must be skipped because an earlier question in this element was answered No."
+                            : "Question {$question->number} cannot be answered before the previous question in this element. Answer each question in sequence.";
+                    }
+
+                    continue;
+                }
+
+                if ($answer === null) {
+                    $blockedReason = 'incomplete';
+
+                    continue;
+                }
+
+                if ($answer === 'No') {
+                    $blockedReason = 'no';
+                }
+            }
+        }
+
+        if ($errors !== []) {
+            return back()->withInput()->withErrors($errors);
+        }
+
+        $assessment->responses()->delete();
+        foreach ($answers as $questionId => $answer) {
+            AssessmentResponse::create([
+                'assessment_id' => $assessment->id,
+                'ncsb_question_id' => $questionId,
+                'answer' => $answer,
+            ]);
         }
         app(NcsbScoringService::class)->calculate($assessment);
 

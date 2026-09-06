@@ -17,6 +17,17 @@
     </a>
 </div>
 
+@if($errors->any())
+    <div class="alert alert-danger" role="alert">
+        <strong>Please review the questionnaire sequence.</strong>
+        <ul class="mb-0 mt-2">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 @if($assessment->overall_maturity_level)
     <div class="row g-3 mb-4">
         <div class="col-md-4">
@@ -49,7 +60,11 @@
 @endif
 
 @if($canEdit)
-    <form method="POST" action="{{ route('assessments.save', $assessment) }}">
+    <div class="alert alert-info">
+        Answer each element in order. Selecting <strong>No</strong> skips and locks the remaining questions in that element.
+    </div>
+
+    <form method="POST" action="{{ route('assessments.save', $assessment) }}" data-sequential-questionnaire>
         @csrf
         @method('PUT')
 @endif
@@ -61,10 +76,15 @@
         </div>
         <div class="card-body">
             @foreach($questions as $question)
-                <div class="border-bottom pb-3 mb-3">
+                <div
+                    class="border-bottom pb-3 mb-3 questionnaire-row"
+                    data-questionnaire-row
+                    data-element="{{ $number }}"
+                >
                     <p class="mb-2">{{ $question->number }}. {{ $question->question }}</p>
                     <label class="me-3">
                         <input
+                            class="questionnaire-input"
                             type="radio"
                             name="answers[{{ $question->id }}]"
                             value="Yes"
@@ -75,6 +95,7 @@
                     </label>
                     <label>
                         <input
+                            class="questionnaire-input"
                             type="radio"
                             name="answers[{{ $question->id }}]"
                             value="No"
@@ -83,6 +104,7 @@
                         >
                         No
                     </label>
+                    <div class="small text-secondary mt-2 d-none" data-questionnaire-note></div>
                 </div>
             @endforeach
         </div>
