@@ -53,6 +53,7 @@ class AssessmentReviewWorkflowTest extends TestCase
         $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
         $reviewer = User::factory()->create(['role' => User::ROLE_REVIEWER]);
         $otherReviewer = User::factory()->create(['role' => User::ROLE_REVIEWER]);
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $assessment = Assessment::create(['user_id' => $assessor->id]);
 
         $this->actingAs($assessor)
@@ -60,6 +61,18 @@ class AssessmentReviewWorkflowTest extends TestCase
             ->assertSessionHas('status');
         $review = Review::firstOrFail();
         $this->actingAs($assessor)->put('/assessments/'.$assessment->id, ['answers' => []])->assertStatus(422);
+        $this->actingAs($assessor)->get('/reviews')->assertForbidden();
+        $this->actingAs($reviewer)
+            ->get('/reviews')
+            ->assertOk()
+            ->assertSee('Reviewer Module')
+            ->assertSee('Open review');
+        $this->actingAs($reviewer)
+            ->get('/reviews/'.$review->id)
+            ->assertOk()
+            ->assertSee('Review actions')
+            ->assertSee('Assessment responses');
+        $this->actingAs($admin)->get('/reviews')->assertOk()->assertSee('Reviewer Module');
         $this->actingAs($otherReviewer)->get('/assessments/'.$assessment->id)->assertForbidden();
         $this->actingAs($reviewer)->get('/assessments/'.$assessment->id)->assertOk()->assertSee('Review by');
         $this->actingAs($reviewer)->patch('/reviews/'.$review->id, ['action' => 'accept'])->assertSessionHas('status');
@@ -70,5 +83,38 @@ class AssessmentReviewWorkflowTest extends TestCase
         $this->actingAs($reviewer)->patch('/reviews/'.$review->id, ['action' => 'complete'])->assertSessionHas('status');
         $this->assertDatabaseHas('reviews', ['id' => $review->id, 'status' => 'completed']);
         $this->assertDatabaseHas('assessments', ['id' => $assessment->id, 'status' => 'completed']);
+    }
+
+    public function test_declined_review_returns_to_open_for_admin_reassignment(): void
+    {
+        $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
+        $reviewer = User::factory()->create(['role' => User::ROLE_REVIEWER]);
+        $replacement = User::factory()->create(['role' => User::ROLE_REVIEWER]);
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $assessment = Assessment::create(['user_id' => $assessor->id]);
+
+        $this->actingAs($assessor)
+            ->post('/assessments/'.$assessment->id.'/reviews', ['reviewer_id' => $reviewer->id])
+            ->assertSessionHas('status');
+        $review = Review::firstOrFail();
+
+        $this->actingAs($reviewer)
+            ->patch('/reviews/'.$review->id, [
+                'action' => 'decline',
+                'decline_reason' => 'Conflict of interest.',
+            ])
+            ->assertSessionHas('status');
+        $this->assertDatabaseHas('assessments', ['id' => $assessment->id, 'status' => 'open']);
+        $this->actingAs($reviewer)->get('/reviews/'.$review->id)->assertForbidden();
+
+        $this->actingAs($admin)
+            ->post('/assessments/'.$assessment->id.'/reviews', ['reviewer_id' => $replacement->id])
+            ->assertSessionHas('status');
+        $this->assertDatabaseCount('reviews', 2);
+        $this->assertDatabaseHas('reviews', [
+            'assessment_id' => $assessment->id,
+            'reviewer_id' => $replacement->id,
+            'status' => 'pending',
+        ]);
     }
 }

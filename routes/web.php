@@ -32,6 +32,10 @@ Route::middleware('auth')->group(function (): void {
         ->name('assessments.report');
     Route::post('/assessments/{assessment}/reviews', [ReviewController::class, 'request'])
         ->name('reviews.request');
+    Route::get('/reviews', [ReviewController::class, 'index'])
+        ->name('reviews.index');
+    Route::get('/reviews/{review}', [ReviewController::class, 'show'])
+        ->name('reviews.show');
     Route::patch('/reviews/{review}', [ReviewController::class, 'update'])
         ->name('reviews.update');
     Route::post('/reviews/{review}/comments', [ReviewController::class, 'comment'])

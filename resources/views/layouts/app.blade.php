@@ -32,6 +32,14 @@
                     >
                         Assessor Module
                     </a>
+                    @if(auth()->user()->isAdmin() || auth()->user()->role === 'reviewer')
+                        <a
+                            class="nav-link text-white {{ request()->routeIs('reviews.*') ? 'active bg-white text-primary' : '' }}"
+                            href="{{ route('reviews.index') }}"
+                        >
+                            Reviewer Module
+                        </a>
+                    @endif
                     @if(auth()->user()->isAdmin())
                         <a
                             class="nav-link text-white {{ request()->routeIs('admin.users.*') ? 'active bg-white text-primary' : '' }}"

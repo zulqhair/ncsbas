@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Assessment;
+use App\Models\NcsbQuestion;
 use App\Models\Review;
 use App\Models\ReviewComment;
 use App\Models\User;
@@ -10,6 +11,49 @@ use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user->isAdmin() || $user->role === User::ROLE_REVIEWER, 403);
+
+        $reviews = Review::query()
+            ->when(
+                ! $user->isAdmin(),
+                fn ($query) => $query
+                    ->where('reviewer_id', $user->id)
+                    ->whereIn('status', ['pending', 'accepted', 'completed'])
+            )
+            ->with(['assessment.user', 'reviewer'])
+            ->latest()
+            ->get();
+
+        return view('reviews.index', compact('reviews'));
+    }
+
+    public function show(Request $request, Review $review)
+    {
+        $user = $request->user();
+        $assigned = $review->reviewer_id === $user->id
+            && in_array($review->status, ['pending', 'accepted', 'completed'], true);
+        abort_unless($user->isAdmin() || $assigned, 403);
+
+        $review->load([
+            'assessment.user',
+            'assessment.elementResults',
+            'assessment.responses',
+            'reviewer',
+            'comments.user',
+        ]);
+
+        return view('reviews.show', [
+            'review' => $review,
+            'assessment' => $review->assessment,
+            'elements' => NcsbQuestion::orderBy('number')->get()->groupBy('element_number'),
+            'answers' => $review->assessment->responses->pluck('answer', 'ncsb_question_id'),
+            'results' => $review->assessment->elementResults->keyBy('element_number'),
+        ]);
+    }
+
     public function request(Request $request, Assessment $assessment)
     {
         $user = $request->user();
@@ -42,11 +86,22 @@ class ReviewController extends Controller
     public function update(Request $request, Review $review)
     {
         $user = $request->user();
-        abort_unless($user->isAdmin() || $review->reviewer_id === $user->id, 403);
+        $assigned = $review->reviewer_id === $user->id
+            && in_array($review->status, ['pending', 'accepted'], true);
+        abort_unless($user->isAdmin() || $assigned, 403);
         $data = $request->validate([
             'action' => 'required|in:accept,decline,complete',
             'decline_reason' => 'nullable|string|max:1000',
         ]);
+        if ($data['action'] === 'accept') {
+            abort_unless($review->status === 'pending', 422, 'Only pending reviews can be accepted.');
+        }
+        if ($data['action'] === 'complete') {
+            abort_unless($review->status === 'accepted', 422, 'Only accepted reviews can be completed.');
+        }
+        if ($data['action'] === 'decline') {
+            abort_unless(in_array($review->status, ['pending', 'accepted'], true), 422, 'This review can no longer be declined.');
+        }
         $status = match ($data['action']) {
             'accept' => 'accepted', 'complete' => 'completed', default => 'open'
         };
@@ -66,9 +121,11 @@ class ReviewController extends Controller
     public function comment(Request $request, Review $review)
     {
         $user = $request->user();
+        $assigned = $review->reviewer_id === $user->id
+            && in_array($review->status, ['pending', 'accepted', 'completed'], true);
         abort_unless(
             $user->isAdmin()
-                || $review->reviewer_id === $user->id
+                || $assigned
                 || $review->assessment->user_id === $user->id,
             403
         );
