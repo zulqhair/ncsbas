@@ -112,60 +112,55 @@
 @endforeach
 
 @if($canEdit)
-        <button class="btn btn-primary mb-4">Save Draft and Recalculate</button>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+            <button class="btn btn-primary" type="submit">Save Draft and Recalculate</button>
+            <button
+                class="btn btn-success"
+                type="button"
+                data-submit-assessment
+                data-bs-toggle="modal"
+                data-bs-target="#submitAssessmentModal"
+                disabled
+            >
+                Submit Assessment
+            </button>
+            <span class="small text-secondary" data-submission-progress>
+                0/{{ $elements->count() }} elements complete
+            </span>
+        </div>
     </form>
 @endif
 
-<div class="card mb-4">
-    <div class="card-header"><strong>All 33 element results</strong></div>
-    <div class="table-responsive">
-        <table class="table table-sm mb-0">
-            <thead>
-                <tr>
-                    <th>Element</th>
-                    <th>Yes answers</th>
-                    <th>Score</th>
-                    <th>Maturity</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for($i = 1; $i <= 33; $i++)
-                    @php($result = $results->get($i))
-                    @php($element = $elements->get($i)?->first())
-                    <tr>
-                        <td>{{ $i }}. {{ $result?->element_name ?? $element?->element_name ?? 'Element '.$i }}</td>
-                        <td>{{ $result?->yes_count ?? 0 }}</td>
-                        <td>{{ $result?->maturity_score ?? 0 }}/3</td>
-                        <td>{{ $result?->maturity_level ?? 'Not scored' }}</td>
-                    </tr>
-                @endfor
-            </tbody>
-        </table>
-    </div>
-</div>
-
-@if($canAssignReview)
-    <div class="card mb-4">
-        <div class="card-header"><strong>Reviewer assignment</strong></div>
-        <div class="card-body">
-            <form class="row g-2" method="POST" action="{{ route('reviews.request', $assessment) }}">
-                @csrf
-                <div class="col-md-8">
-                    <select class="form-select" name="reviewer_id" required>
-                        <option value="">Choose reviewer</option>
-                        @foreach(\App\Models\User::whereIn('role', ['reviewer', 'admin'])
-                            ->orderBy('name')
-                            ->get() as $reviewer)
-                            <option value="{{ $reviewer->id }}">
-                                {{ $reviewer->name }} ({{ ucfirst($reviewer->role) }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <button class="btn btn-outline-primary w-100">Assign / Request review</button>
-                </div>
-            </form>
+@if($canEdit)
+    <div class="modal fade" id="submitAssessmentModal" tabindex="-1" aria-labelledby="submitAssessmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('reviews.request', $assessment) }}">
+                    @csrf
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5" id="submitAssessmentModalLabel">Submit assessment for review</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-secondary">
+                            Select a reviewer. After submission, the assessment will be locked for editing.
+                        </p>
+                        <label class="form-label" for="reviewer_id">Reviewer</label>
+                        <select class="form-select" id="reviewer_id" name="reviewer_id" required>
+                            <option value="">Choose reviewer</option>
+                            @foreach($reviewers as $reviewer)
+                                <option value="{{ $reviewer->id }}">
+                                    {{ $reviewer->name }} ({{ ucfirst($reviewer->role) }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Submit for review</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 @endif

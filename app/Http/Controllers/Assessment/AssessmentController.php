@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
 use App\Models\NcsbQuestion;
+use App\Models\User;
 use App\Services\NcsbScoringService;
 use Illuminate\Http\Request;
 
@@ -63,6 +64,10 @@ class AssessmentController extends Controller
                 ->orderBy('element_number')
                 ->get()
                 ->keyBy('element_number'),
+            'reviewers' => User::query()
+                ->whereIn('role', [User::ROLE_REVIEWER, User::ROLE_ADMIN])
+                ->orderBy('name')
+                ->get(),
             'canEdit' => ($isOwner || $isAdmin) && $assessment->status === 'draft',
             'canAssignReview' => $isAdmin || ($isOwner && $assessment->status === 'draft'),
         ]);

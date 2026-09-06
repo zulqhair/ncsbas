@@ -147,8 +147,10 @@ function renderDashboardCharts() {
 
 function setupSequentialQuestionnaire() {
     const form = document.querySelector('[data-sequential-questionnaire]');
+    const submitButton = document.querySelector('[data-submit-assessment]');
+    const progress = document.querySelector('[data-submission-progress]');
 
-    if (! form) {
+    if (! form || ! submitButton) {
         return;
     }
 
@@ -160,6 +162,36 @@ function setupSequentialQuestionnaire() {
 
             return groups;
         }, {});
+
+    const refreshSubmissionState = () => {
+        let completedElements = 0;
+        const elementGroups = Object.values(rowsByElement);
+
+        elementGroups.forEach((rows) => {
+            let blockedReason = null;
+            let complete = true;
+
+            rows.forEach((row) => {
+                const selected = row.querySelector('.questionnaire-input:checked')?.value;
+
+                if (blockedReason === null && selected === undefined) {
+                    complete = false;
+                    blockedReason = 'incomplete';
+                } else if (blockedReason === null && selected === 'No') {
+                    blockedReason = 'no';
+                }
+            });
+
+            if (complete) {
+                completedElements++;
+            }
+        });
+
+        submitButton.disabled = completedElements !== elementGroups.length;
+        if (progress) {
+            progress.textContent = `${completedElements}/${elementGroups.length} elements complete`;
+        }
+    };
 
     Object.values(rowsByElement).forEach((rows) => {
         const refreshRows = () => {
@@ -195,6 +227,8 @@ function setupSequentialQuestionnaire() {
                         : (selected === 'Yes' ? null : 'incomplete');
                 }
             });
+
+            refreshSubmissionState();
         };
 
         rows.forEach((row) => {

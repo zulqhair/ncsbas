@@ -58,6 +58,20 @@ class ReviewController extends Controller
     {
         $user = $request->user();
         abort_unless($assessment->user_id === $user->id || $user->isAdmin(), 403);
+
+        $adminReassignment = $user->isAdmin() && $assessment->status === 'open';
+        if ($assessment->status !== 'draft' && ! $adminReassignment) {
+            return back()->withErrors([
+                'assessment' => 'This assessment has already been submitted or is no longer editable.',
+            ]);
+        }
+
+        if (! $adminReassignment && ! $this->assessmentIsComplete($assessment)) {
+            return back()->withErrors([
+                'assessment' => 'Complete every element in sequence before submitting the assessment.',
+            ]);
+        }
+
         $data = $request->validate(['reviewer_id' => 'required|exists:users,id']);
         $reviewer = User::findOrFail($data['reviewer_id']);
         abort_unless($reviewer->role === User::ROLE_REVIEWER || $reviewer->isAdmin(), 422);
@@ -81,6 +95,41 @@ class ReviewController extends Controller
         $assessment->update(['status' => 'open']);
 
         return back()->with('status', 'Review assigned and waiting for reviewer acceptance.');
+    }
+
+    private function assessmentIsComplete(Assessment $assessment): bool
+    {
+        $answers = $assessment->responses()->pluck('answer', 'ncsb_question_id');
+
+        return NcsbQuestion::query()
+            ->orderBy('number')
+            ->get()
+            ->groupBy('element_number')
+            ->every(function ($questions) use ($answers): bool {
+                $skipping = false;
+
+                foreach ($questions as $question) {
+                    $answer = $answers[$question->id] ?? null;
+
+                    if ($skipping) {
+                        if ($answer !== null) {
+                            return false;
+                        }
+
+                        continue;
+                    }
+
+                    if ($answer === null) {
+                        return false;
+                    }
+
+                    if ($answer === 'No') {
+                        $skipping = true;
+                    }
+                }
+
+                return true;
+            });
     }
 
     public function update(Request $request, Review $review)

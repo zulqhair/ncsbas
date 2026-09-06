@@ -41,7 +41,10 @@ class AssessmentReviewWorkflowTest extends TestCase
         $this->actingAs($assessor)
             ->get('/assessments/'.$assessment->id)
             ->assertOk()
-            ->assertSee('All 33 element results')
+            ->assertDontSee('All 33 element results')
+            ->assertDontSee('Reviewer assignment')
+            ->assertSee('Submit Assessment')
+            ->assertSee('Submit assessment for review')
             ->assertSee('Test element');
         $this->actingAs($assessor)
             ->get('/assessments/'.$assessment->id.'/report')
@@ -51,6 +54,7 @@ class AssessmentReviewWorkflowTest extends TestCase
     public function test_no_answer_skips_the_remaining_questions_in_that_element(): void
     {
         $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
+        $reviewer = User::factory()->create(['role' => User::ROLE_REVIEWER]);
         $questions = collect([
             [1, 1],
             [2, 1],
@@ -73,6 +77,10 @@ class AssessmentReviewWorkflowTest extends TestCase
 
         $this->actingAs($assessor)->post('/assessments')->assertRedirect();
         $assessment = Assessment::firstOrFail();
+
+        $this->actingAs($assessor)
+            ->post('/assessments/'.$assessment->id.'/reviews', ['reviewer_id' => $reviewer->id])
+            ->assertSessionHasErrors('assessment');
 
         $this->actingAs($assessor)
             ->put('/assessments/'.$assessment->id, [
@@ -113,6 +121,15 @@ class AssessmentReviewWorkflowTest extends TestCase
         $this->assertDatabaseMissing('assessment_responses', [
             'assessment_id' => $assessment->id,
             'ncsb_question_id' => $questions[3]->id,
+        ]);
+
+        $this->actingAs($assessor)
+            ->post('/assessments/'.$assessment->id.'/reviews', ['reviewer_id' => $reviewer->id])
+            ->assertSessionHas('status');
+        $this->assertDatabaseHas('reviews', [
+            'assessment_id' => $assessment->id,
+            'reviewer_id' => $reviewer->id,
+            'status' => 'pending',
         ]);
     }
 
