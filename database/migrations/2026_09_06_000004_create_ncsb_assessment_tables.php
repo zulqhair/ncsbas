@@ -1,5 +1,57 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-return new class extends Migration { public function up(): void { Schema::create('ncsb_questions', function (Blueprint $t): void { $t->id(); $t->unsignedInteger('number')->unique(); $t->string('domain'); $t->string('category'); $t->unsignedInteger('element_number'); $t->string('element_name'); $t->text('question'); $t->timestamps(); }); Schema::create('assessments', function (Blueprint $t): void { $t->id(); $t->foreignId('user_id')->constrained()->cascadeOnDelete(); $t->string('status')->default('draft'); $t->decimal('overall_score', 5, 4)->nullable(); $t->string('overall_maturity_level')->nullable(); $t->timestamps(); }); Schema::create('assessment_responses', function (Blueprint $t): void { $t->id(); $t->foreignId('assessment_id')->constrained()->cascadeOnDelete(); $t->foreignId('ncsb_question_id')->constrained()->cascadeOnDelete(); $t->string('answer')->nullable(); $t->timestamps(); $t->unique(['assessment_id', 'ncsb_question_id']); }); Schema::create('assessment_element_results', function (Blueprint $t): void { $t->id(); $t->foreignId('assessment_id')->constrained()->cascadeOnDelete(); $t->unsignedInteger('element_number'); $t->string('element_name'); $t->unsignedInteger('yes_count'); $t->unsignedTinyInteger('maturity_score'); $t->string('maturity_level'); $t->timestamps(); $t->unique(['assessment_id', 'element_number']); }); } public function down(): void { Schema::dropIfExists('assessment_element_results'); Schema::dropIfExists('assessment_responses'); Schema::dropIfExists('assessments'); Schema::dropIfExists('ncsb_questions'); } };
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('ncsb_questions', function (Blueprint $t): void {
+            $t->id();
+            $t->unsignedInteger('number')->unique();
+            $t->string('domain');
+            $t->string('category');
+            $t->unsignedInteger('element_number');
+            $t->string('element_name');
+            $t->text('question');
+            $t->timestamps();
+        });
+        Schema::create('assessments', function (Blueprint $t): void {
+            $t->id();
+            $t->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $t->string('status')->default('draft');
+            $t->decimal('overall_score', 5, 4)->nullable();
+            $t->string('overall_maturity_level')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('assessment_responses', function (Blueprint $t): void {
+            $t->id();
+            $t->foreignId('assessment_id')->constrained()->cascadeOnDelete();
+            $t->foreignId('ncsb_question_id')->constrained()->cascadeOnDelete();
+            $t->string('answer')->nullable();
+            $t->timestamps();
+            $t->unique(['assessment_id', 'ncsb_question_id']);
+        });
+        Schema::create('assessment_element_results', function (Blueprint $t): void {
+            $t->id();
+            $t->foreignId('assessment_id')->constrained()->cascadeOnDelete();
+            $t->unsignedInteger('element_number');
+            $t->string('element_name');
+            $t->unsignedInteger('yes_count');
+            $t->unsignedTinyInteger('maturity_score');
+            $t->string('maturity_level');
+            $t->timestamps();
+            $t->unique(['assessment_id', 'element_number']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('assessment_element_results');
+        Schema::dropIfExists('assessment_responses');
+        Schema::dropIfExists('assessments');
+        Schema::dropIfExists('ncsb_questions');
+    }
+};
