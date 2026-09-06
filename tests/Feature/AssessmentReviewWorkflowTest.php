@@ -117,4 +117,38 @@ class AssessmentReviewWorkflowTest extends TestCase
             'status' => 'pending',
         ]);
     }
+
+    public function test_dashboard_data_is_scoped_by_role(): void
+    {
+        $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
+        $reviewer = User::factory()->create(['role' => User::ROLE_REVIEWER]);
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $ownAssessment = Assessment::create(['user_id' => $assessor->id]);
+        $otherAssessment = Assessment::create(['user_id' => $reviewer->id]);
+        Review::create([
+            'assessment_id' => $otherAssessment->id,
+            'reviewer_id' => $reviewer->id,
+            'requested_by_user_id' => $assessor->id,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($assessor)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Assessment #'.$ownAssessment->id)
+            ->assertDontSee('Assessment #'.$otherAssessment->id)
+            ->assertDontSee('Reviewer Module');
+        $this->actingAs($reviewer)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Assessment #'.$otherAssessment->id)
+            ->assertDontSee('Assessment #'.$ownAssessment->id)
+            ->assertSee('Reviewer Module');
+        $this->actingAs($admin)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Assessment #'.$ownAssessment->id)
+            ->assertSee('Assessment #'.$otherAssessment->id)
+            ->assertSee('Reviewer Module');
+    }
 }

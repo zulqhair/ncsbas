@@ -5,6 +5,7 @@ use App\Http\Controllers\Assessment\AssessmentController;
 use App\Http\Controllers\Assessment\AssessmentReportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,7 +20,8 @@ Route::middleware('guest')->group(function (): void {
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 });
 Route::middleware('auth')->group(function (): void {
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
     Route::get('/assessments', [AssessmentController::class, 'index'])
         ->name('assessments.index');
     Route::post('/assessments', [AssessmentController::class, 'create'])

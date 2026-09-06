@@ -1,1 +1,42 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
+
+:root {
+    --ncsbas-primary: #2457c5;
+    --ncsbas-ink: #17233b;
+    --ncsbas-muted: #6b7894;
+}
+
+body {
+    color: var(--ncsbas-ink);
+}
+
+.dashboard-stat,
+.dashboard-chart-card {
+    border: 0;
+    box-shadow: 0 0.5rem 1.5rem rgba(28, 45, 85, 0.08);
+}
+
+.dashboard-stat {
+    border-left: 4px solid var(--ncsbas-primary);
+}
+
+.dashboard-stat .display-6 {
+    color: var(--ncsbas-ink);
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+}
+
+.chart-container-sm {
+    min-height: 250px;
+}
+
+.chart-container-md {
+    min-height: 320px;
+}
+
+.chart-container-lg {
+    min-height: 720px;
+}
