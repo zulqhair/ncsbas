@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['name', 'email', 'password', 'role'])]
 #[Hidden(['password', 'remember_token'])]
@@ -25,6 +26,7 @@ class User extends Authenticatable
     {
         return $this->role === self::ROLE_ADMIN;
     }
+    public function assessments(): HasMany { return $this->hasMany(Assessment::class); }
 
     /**
      * Get the attributes that should be cast.
