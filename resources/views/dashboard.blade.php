@@ -97,35 +97,6 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="h5 mb-0">Recent assessments</h2>
-                <a class="small" href="{{ route('assessments.index') }}">View all</a>
-            </div>
-            @forelse($assessments->take(5) as $assessment)
-                <div class="d-flex flex-wrap justify-content-between gap-2 border-bottom py-3">
-                    <div>
-                        <a class="fw-semibold text-decoration-none" href="{{ route('assessments.show', $assessment) }}">
-                            Assessment #{{ $assessment->id }}
-                        </a>
-                        @if(auth()->user()->isAdmin())
-                            <div class="small text-secondary">{{ $assessment->user->name }}</div>
-                        @endif
-                    </div>
-                    <div class="text-end">
-                        <span class="badge text-bg-secondary">{{ ucfirst(str_replace('_', ' ', $assessment->status)) }}</span>
-                        <div class="small text-secondary mt-1">
-                            {{ $assessment->overall_score !== null ? number_format($assessment->overall_score * 100, 1).'%' : 'Not scored' }}
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <p class="text-secondary mb-0">No assessments are available yet.</p>
-            @endforelse
-        </div>
-    </div>
-
     <script>
         window.ncsbasDashboardData = @js($chartData);
     </script>

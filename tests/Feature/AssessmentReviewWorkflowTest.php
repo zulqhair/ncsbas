@@ -241,4 +241,15 @@ class AssessmentReviewWorkflowTest extends TestCase
             ->assertSee('Assessment #'.$otherAssessment->id)
             ->assertSee('Reviewer Module');
     }
+
+    public function test_dashboard_does_not_display_the_recent_assessments_section(): void
+    {
+        $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
+        Assessment::create(['user_id' => $assessor->id]);
+
+        $this->actingAs($assessor)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertDontSee('Recent assessments');
+    }
 }
