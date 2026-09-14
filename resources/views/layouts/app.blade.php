@@ -3,75 +3,74 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>NCSBAS</title>
+    <meta name="theme-color" content="#071A3D">
+    <title>@yield('title', 'Assessment workspace') · NCSBAS</title>
+    @fonts
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-light">
-    @auth
-        <div class="app-shell min-vh-100">
-            <aside class="app-sidebar bg-primary text-white d-flex flex-column p-3 shadow">
-                <a class="text-white text-decoration-none fs-4 fw-bold mb-4" href="{{ route('dashboard') }}">
-                    NCSBAS
-                </a>
-
-                <p class="small text-white-50 mb-4">
-                    {{ auth()->user()->name }}<br>
-                    {{ ucfirst(auth()->user()->role) }}
-                </p>
-
-                <nav class="nav nav-pills flex-column gap-2">
-                    <a
-                        class="nav-link text-white {{ request()->routeIs('dashboard') ? 'active bg-white text-primary' : '' }}"
-                        href="{{ route('dashboard') }}"
-                    >
-                        Dashboard
-                    </a>
-                    <a
-                        class="nav-link text-white {{ request()->routeIs('assessments.*') ? 'active bg-white text-primary' : '' }}"
-                        href="{{ route('assessments.index') }}"
-                    >
-                        Assessor Module
-                    </a>
-                    @if(auth()->user()->isAdmin() || auth()->user()->role === 'reviewer')
-                        <a
-                            class="nav-link text-white {{ request()->routeIs('reviews.*') ? 'active bg-white text-primary' : '' }}"
-                            href="{{ route('reviews.index') }}"
-                        >
-                            Reviewer Module
-                        </a>
-                    @endif
-                    @if(auth()->user()->isAdmin())
-                        <a
-                            class="nav-link text-white {{ request()->routeIs('admin.users.*') ? 'active bg-white text-primary' : '' }}"
-                            href="{{ route('admin.users.index') }}"
-                        >
-                            User Management
-                        </a>
-                    @endif
-                </nav>
-
-                <form class="mt-auto" method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button class="btn btn-outline-light w-100" type="submit">Log out</button>
-                </form>
-            </aside>
-
-            <main class="app-main flex-grow-1 py-4">
-                <div class="container-fluid px-4">
-                    @if(session('status'))
-                        <div class="alert alert-success">{{ session('status') }}</div>
-                    @endif
-
-                    @yield('content')
-                </div>
-            </main>
-        </div>
-    @else
-        <main class="py-5">
-            <div class="container">
-                @yield('content')
+<body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <header class="site-header">
+        <div class="site-container identity-row">
+            <a class="brand" href="{{ route('home') }}" aria-label="NCSBAS home">
+                <span class="brand-symbol"><x-icon name="shield" size="30" /></span>
+                <span><strong>NCSBAS<span class="brand-period">.</span></strong><span class="brand-description">National Cyber Security<br>Baseline Assessment System</span></span>
+            </a>
+            <div class="identity-meta">
+                @auth
+                    <span class="user-avatar" aria-hidden="true">{{ mb_substr(auth()->user()->name, 0, 1) }}</span>
+                    <span class="user-identity"><strong>{{ auth()->user()->name }}</strong><span>{{ ucfirst(auth()->user()->role) }} workspace</span></span>
+                @else
+                    <span class="identity-tag"><x-icon name="shield" /> NCSB v1.1 assessment platform</span>
+                @endauth
             </div>
-        </main>
-    @endauth
+        </div>
+        <div class="navigation-band">
+            <div class="site-container navigation-container">
+                <button class="menu-toggle" type="button" aria-expanded="true" aria-controls="primary-navigation" data-menu-toggle hidden><x-icon name="menu" /> Menu</button>
+                <nav id="primary-navigation" class="primary-navigation" aria-label="Main navigation">
+                    <div class="nav-links">
+                        @auth
+                            <a href="{{ route('dashboard') }}" @if(request()->routeIs('dashboard')) aria-current="page" @endif><x-icon name="grid" /> Dashboard</a>
+                            <a href="{{ route('assessments.index') }}" @if(request()->routeIs('assessments.*')) aria-current="page" @endif><x-icon name="document" /> Assessor Module</a>
+                            @if(auth()->user()->isAdmin() || auth()->user()->role === 'reviewer')
+                                <a href="{{ route('reviews.index') }}" @if(request()->routeIs('reviews.*')) aria-current="page" @endif><x-icon name="review" /> Reviewer Module</a>
+                            @endif
+                            @if(auth()->user()->isAdmin())
+                                <a href="{{ route('admin.users.index') }}" @if(request()->routeIs('admin.users.*')) aria-current="page" @endif><x-icon name="users" /> User management</a>
+                            @endif
+                        @else
+                            <a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif>Overview</a>
+                            <a href="{{ route('home') }}#assessment-process">Assessment process</a>
+                            <a href="{{ route('home') }}#workspace-roles">Workspace roles</a>
+                        @endauth
+                    </div>
+                    @auth
+                        <form method="POST" action="{{ route('logout') }}">@csrf<button class="nav-action" type="submit"><x-icon name="logout" /> Log out</button></form>
+                    @else
+                        <a class="nav-action" href="{{ route('login') }}">Log in <x-icon name="arrow" /></a>
+                    @endauth
+                </nav>
+            </div>
+        </div>
+    </header>
+    <main id="main-content" class="site-container main-content" tabindex="-1">
+        @if(session('status'))
+            <div class="alert alert-success notice" role="status"><x-icon name="check" /><div>{{ session('status') }}</div></div>
+        @endif
+        @if($errors->any())
+            <div class="alert alert-danger" role="alert" tabindex="-1" data-error-summary>
+                <strong>Please check the information below.</strong>
+                <ul class="mb-0 mt-2">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+            </div>
+        @endif
+        @yield('content')
+    </main>
+    <footer class="site-footer">
+        <div class="site-container footer-content">
+            <div><strong>NCSBAS</strong><p>National Cyber Security Baseline Assessment System</p></div>
+            <div class="footer-meta"><span>NCSB v1.1</span><span>Assess. Review. Report.</span><a href="#main-content">Back to top ↑</a></div>
+        </div>
+    </footer>
 </body>
 </html>
