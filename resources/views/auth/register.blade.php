@@ -23,11 +23,11 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label" for="password">Password</label>
-                    <input class="form-control @error('password') is-invalid @enderror" id="password" type="password" name="password" autocomplete="new-password" required minlength="8" aria-describedby="password-help @error('password') password-error @enderror" @error('password') aria-invalid="true" @enderror>
-                    <div class="form-text" id="password-help">Use at least 8 characters.</div>
+                    <input class="form-control @error('password') is-invalid @enderror" id="password" type="password" name="password" autocomplete="new-password" required minlength="15" maxlength="128" aria-describedby="password-help @error('password') password-error @enderror" @error('password') aria-invalid="true" @enderror>
+                    <div class="form-text" id="password-help">Use a passphrase of 15 to 128 characters.</div>
                     @error('password')<div class="invalid-feedback" id="password-error">{{ $message }}</div>@enderror
                 </div>
-                <div class="mb-4"><label class="form-label" for="password_confirmation">Confirm password</label><input class="form-control" id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password" required minlength="8"></div>
+                <div class="mb-4"><label class="form-label" for="password_confirmation">Confirm password</label><input class="form-control" id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password" required minlength="15" maxlength="128"></div>
                 <button class="btn btn-primary w-100" type="submit" data-loading-label="Creating account…">Register <x-icon name="arrow" /></button>
             </form>
             <p class="auth-switch">Already registered? <a href="{{ route('login') }}">Log in</a></p>

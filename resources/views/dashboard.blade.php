@@ -44,5 +44,5 @@
             <details class="chart-data" open><summary>View all element scores</summary><div class="table-responsive" role="region" aria-label="Element performance data" tabindex="0"><table class="table"><thead><tr><th scope="col">Element</th><th scope="col">Average maturity score</th></tr></thead><tbody>@foreach($chartData['elements']['labels'] as $index => $label)<tr><th scope="row">{{ $index + 1 }}. {{ $label }}</th><td>{{ $chartData['elements']['values'][$index] }}%</td></tr>@endforeach</tbody></table></div></details>
         </div></section>
     @endif
-    <script>window.ncsbasDashboardData = @js($chartData);</script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">window.ncsbasDashboardData = @js($chartData);</script>
 @endsection

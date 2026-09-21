@@ -15,9 +15,9 @@ class AuthenticationAndRolesTest extends TestCase
         $this->post('/register', [
             'name' => 'Amina Assessor',
             'email' => 'amina@example.test',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ])->assertRedirect('/dashboard');
+            'password' => 'a secure test passphrase',
+            'password_confirmation' => 'a secure test passphrase',
+        ])->assertRedirect('/email/verify');
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', ['email' => 'amina@example.test', 'role' => User::ROLE_ASSESSOR]);
     }

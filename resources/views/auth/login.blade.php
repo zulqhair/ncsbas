@@ -25,6 +25,7 @@
                 <div class="form-check mb-4"><input class="form-check-input" id="remember" type="checkbox" name="remember" @checked(old('remember'))><label class="form-check-label" for="remember">Remember me</label></div>
                 <button class="btn btn-primary w-100" type="submit" data-loading-label="Logging in…">Log in <x-icon name="arrow" /></button>
             </form>
+            <p class="auth-switch"><a href="{{ route('password.request') }}">Forgot your password?</a></p>
             <p class="auth-switch">New to NCSBAS? <a href="{{ route('register') }}">Create an account</a></p>
         </section>
     </div>
