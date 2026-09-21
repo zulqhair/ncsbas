@@ -12,13 +12,13 @@ class SecurityHardeningTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registration_requires_a_long_passphrase(): void
+    public function test_registration_requires_a_ten_character_passphrase(): void
     {
         $this->post('/register', [
             'name' => 'Amina Assessor',
             'email' => 'amina@example.test',
-            'password' => str_repeat('a', 14),
-            'password_confirmation' => str_repeat('a', 14),
+            'password' => str_repeat('a', 9),
+            'password_confirmation' => str_repeat('a', 9),
         ])->assertSessionHasErrors('password');
 
         $this->post('/register', [

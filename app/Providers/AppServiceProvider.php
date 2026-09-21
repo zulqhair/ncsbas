@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Password::defaults(function (): Password {
-            $password = Password::min(15)->max(128);
+            $password = Password::min(10)->max(128);
 
             return $this->app->isProduction() ? $password->uncompromised() : $password;
         });

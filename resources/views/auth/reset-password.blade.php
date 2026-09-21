@@ -16,11 +16,11 @@
             </div>
             <div class="mb-3">
                 <label class="form-label" for="password">New password</label>
-                <input class="form-control @error('password') is-invalid @enderror" id="password" type="password" name="password" autocomplete="new-password" required minlength="15" maxlength="128" @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
-                <div class="form-text">Use a passphrase of 15 to 128 characters.</div>
+                <input class="form-control @error('password') is-invalid @enderror" id="password" type="password" name="password" autocomplete="new-password" required minlength="10" maxlength="128" @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
+                <div class="form-text">Use a passphrase of 10 to 128 characters.</div>
                 @error('password')<div class="invalid-feedback" id="password-error">{{ $message }}</div>@enderror
             </div>
-            <div class="mb-4"><label class="form-label" for="password_confirmation">Confirm new password</label><input class="form-control" id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password" required minlength="15" maxlength="128"></div>
+            <div class="mb-4"><label class="form-label" for="password_confirmation">Confirm new password</label><input class="form-control" id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password" required minlength="10" maxlength="128"></div>
             <button class="btn btn-primary w-100" type="submit" data-loading-label="Resetting…">Reset password <x-icon name="arrow" /></button>
         </form>
     </section>
