@@ -40,31 +40,6 @@ function escapeHtml(value) {
     }[character]));
 }
 
-function wrapRadarLabel(label) {
-    const maximumLineLength = 18;
-    const lines = [];
-    let line = '';
-
-    String(label).split(' ').forEach((word) => {
-        const nextLine = line === '' ? word : line+' '+word;
-
-        if (nextLine.length > maximumLineLength && line !== '') {
-            lines.push(line);
-            line = word;
-
-            return;
-        }
-
-        line = nextLine;
-    });
-
-    if (line !== '') {
-        lines.push(line);
-    }
-
-    return lines.join('\n');
-}
-
 function createChart(id, option, containerSelector) {
     const element = document.getElementById(id);
 
@@ -259,54 +234,55 @@ function renderDashboardCharts() {
 function renderReviewChart() {
     const data = window.ncsbasReviewData;
 
-    if (! data || ! document.getElementById('reviewMaturityRadarChart')) {
+    if (! data) {
         return;
     }
 
-    const pointSeries = data.scores.map((score, index) => ({
-        name: data.labels[index],
+    const domainPointSeries = data.domains.map((domain, index) => ({
+        name: domain.name,
         type: 'radar',
         symbol: 'circle',
-        symbolSize: 9,
+        symbolSize: 10,
         lineStyle: { opacity: 0 },
         areaStyle: { opacity: 0 },
         data: [{
-            value: data.scores.map((value, pointIndex) => pointIndex === index ? value : '-'),
-            elementIndex: index,
+            value: data.domains.map((item, pointIndex) => pointIndex === index ? item.score : '-'),
+            domainIndex: index,
         }],
     }));
 
-    createChart('reviewMaturityRadarChart', {
+    createChart('reviewDomainRadarChart', {
         color: [dashboardColors.primary],
         tooltip: {
             trigger: 'item',
             formatter: (params) => {
-                const index = params.data.elementIndex;
+                const index = params.data.domainIndex;
 
                 if (index === undefined) {
-                    return 'Move over a point to see its element details.';
+                    return 'Move over a point to see its domain details.';
                 }
 
-                return '<strong>Element '+(index + 1)+': '+escapeHtml(data.labels[index])+'</strong>'
-                    +'<br>Maturity: '+escapeHtml(data.maturityLevels[index])+' ('+data.scores[index]+'/3)'
-                    +'<br>Yes responses: '+data.yesCounts[index];
+                const domain = data.domains[index];
+
+                return '<strong>'+escapeHtml(domain.name)+'</strong>'
+                    +'<br>Average maturity: '+domain.score+'/3'
+                    +'<br>Elements: '+domain.elementCount;
             },
         },
         radar: {
             center: ['50%', '51%'],
-            radius: '68%',
+            radius: '62%',
             splitNumber: 3,
             axisName: {
                 color: '#526071',
                 fontFamily: chartFontFamily,
-                fontSize: 10,
-                lineHeight: 13,
+                fontSize: 12,
             },
             splitLine: { lineStyle: { color: '#e7ecf3' } },
             splitArea: { areaStyle: { color: ['#ffffff', '#fafbfd'] } },
             axisLine: { lineStyle: { color: '#e7ecf3' } },
-            indicator: data.labels.map((label) => ({
-                name: wrapRadarLabel(label),
+            indicator: data.domains.map((domain) => ({
+                name: domain.name,
                 max: 3,
             })),
         },
@@ -321,9 +297,131 @@ function renderReviewChart() {
             areaStyle: {
                 color: 'rgba(11, 46, 102, 0.14)',
             },
-            data: [{ value: data.scores }],
-        }, ...pointSeries],
-    }, '[data-review-chart-container]');
+            data: [{ value: data.domains.map((domain) => domain.score) }],
+        }, ...domainPointSeries],
+    }, '[data-review-domain-chart-container]');
+
+    createChart('reviewMaturityDistributionChart', {
+        color: [
+            dashboardColors.secondary,
+            dashboardColors.warning,
+            dashboardColors.softBlue,
+            dashboardColors.success,
+        ],
+        tooltip: {
+            trigger: 'item',
+            formatter: (params) => '<strong>'+escapeHtml(params.name)+'</strong><br>'+params.value+' elements ('+params.percent+'%)',
+        },
+        legend: {
+            bottom: 0,
+            type: 'scroll',
+        },
+        series: [{
+            type: 'pie',
+            radius: ['50%', '68%'],
+            avoidLabelOverlap: true,
+            label: { show: false },
+            labelLine: { show: false },
+            data: data.maturityDistribution.map((level) => ({
+                name: level.name,
+                value: level.count,
+            })),
+        }],
+    }, '[data-review-distribution-chart-container]');
+
+    createChart('reviewLowestElementsChart', {
+        color: [dashboardColors.warning],
+        grid: {
+            top: 16,
+            right: 32,
+            bottom: 20,
+            left: 250,
+        },
+        tooltip: {
+            trigger: 'item',
+            formatter: (params) => {
+                const element = data.lowestElements[params.dataIndex];
+
+                return '<strong>Element '+element.number+': '+escapeHtml(element.name)+'</strong>'
+                    +'<br>Maturity: '+escapeHtml(element.maturityLevel)+' ('+element.score+'/3)'
+                    +'<br>Yes responses: '+element.yesCount;
+            },
+        },
+        xAxis: {
+            type: 'value',
+            min: 0,
+            max: 3,
+            interval: 1,
+            axisLabel: { formatter: '{value}' },
+            splitLine: { lineStyle: { color: '#e7ecf3' } },
+        },
+        yAxis: {
+            type: 'category',
+            inverse: true,
+            data: data.lowestElements.map((element) => element.name),
+            axisTick: { show: false },
+            axisLine: { show: false },
+            axisLabel: {
+                width: 230,
+                overflow: 'truncate',
+            },
+        },
+        series: [{
+            name: 'Maturity score',
+            type: 'bar',
+            data: data.lowestElements.map((element) => element.score),
+            barMaxWidth: 26,
+            itemStyle: { borderRadius: [0, 3, 3, 0] },
+        }],
+    }, '[data-review-lowest-chart-container]');
+
+    const elements = [...data.elements].sort((first, second) => first.number - second.number);
+
+    createChart('reviewElementMaturityChart', {
+        color: [dashboardColors.softBlue],
+        grid: {
+            top: 20,
+            right: 48,
+            bottom: 24,
+            left: 320,
+        },
+        tooltip: {
+            trigger: 'item',
+            formatter: (params) => {
+                const element = elements[params.dataIndex];
+
+                return '<strong>Element '+element.number+': '+escapeHtml(element.name)+'</strong>'
+                    +'<br>Maturity: '+escapeHtml(element.maturityLevel)+' ('+element.score+'/3)'
+                    +'<br>Yes responses: '+element.yesCount;
+            },
+        },
+        xAxis: {
+            type: 'value',
+            min: 0,
+            max: 3,
+            interval: 1,
+            axisLabel: { formatter: '{value}' },
+            splitLine: { lineStyle: { color: '#e7ecf3' } },
+        },
+        yAxis: {
+            type: 'category',
+            inverse: true,
+            data: elements.map((element) => element.name),
+            axisTick: { show: false },
+            axisLine: { show: false },
+            axisLabel: {
+                width: 300,
+                overflow: 'truncate',
+            },
+        },
+        series: [{
+            name: 'Maturity score',
+            type: 'bar',
+            data: elements.map((element) => element.score),
+            barMaxWidth: 20,
+            itemStyle: { borderRadius: [0, 3, 3, 0] },
+        }],
+    }, '[data-review-element-chart-container]');
 }
 
 function setupNavigation() {

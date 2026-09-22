@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Assessment;
+use App\Models\AssessmentElementResult;
 use App\Models\NcsbQuestion;
 use App\Models\Review;
 use App\Models\User;
@@ -168,11 +169,14 @@ class AssessmentReviewWorkflowTest extends TestCase
             ->get('/reviews/'.$review->id)
             ->assertOk()
             ->assertSee('Review actions')
-            ->assertSee('Element maturity profile')
+            ->assertSee('Domain maturity profile')
+            ->assertSee('Maturity distribution')
+            ->assertSee('Elements needing attention')
+            ->assertSee('Element maturity scores')
             ->assertDontSee('33 element results')
             ->assertSee(route('reviews.responses', $review), false)
-            ->assertSee('maturityLevels')
-            ->assertSee('yesCounts')
+            ->assertSee('maturityLevel')
+            ->assertSee('yesCount')
             ->assertDontSee('All assessment responses');
         $this->actingAs($reviewer)
             ->get('/reviews/'.$review->id.'/responses')
@@ -225,6 +229,56 @@ class AssessmentReviewWorkflowTest extends TestCase
             'reviewer_id' => $replacement->id,
             'status' => 'pending',
         ]);
+    }
+
+    public function test_reviewer_workspace_aggregates_element_scores_by_domain(): void
+    {
+        $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
+        $reviewer = User::factory()->create(['role' => User::ROLE_REVIEWER]);
+        $assessment = Assessment::create(['user_id' => $assessor->id]);
+        $review = Review::create([
+            'assessment_id' => $assessment->id,
+            'reviewer_id' => $reviewer->id,
+            'requested_by_user_id' => $assessor->id,
+            'status' => 'accepted',
+        ]);
+
+        foreach ([
+            [1, 'Govern', 'Policy management', 1],
+            [2, 'Govern', 'Risk management', 3],
+            [3, 'Identify', 'Asset management', 2],
+        ] as [$number, $domain, $elementName, $score]) {
+            NcsbQuestion::create([
+                'number' => $number,
+                'domain' => $domain,
+                'category' => 'Test',
+                'element_number' => $number,
+                'element_name' => $elementName,
+                'question' => 'Question '.$number,
+            ]);
+            AssessmentElementResult::create([
+                'assessment_id' => $assessment->id,
+                'element_number' => $number,
+                'element_name' => $elementName,
+                'yes_count' => $score,
+                'maturity_score' => $score,
+                'maturity_level' => 'Test level',
+            ]);
+        }
+
+        $this->actingAs($reviewer)
+            ->get('/reviews/'.$review->id)
+            ->assertOk()
+            ->assertSee('Domain maturity profile')
+            ->assertSee('Element maturity scores')
+            ->assertSee('Maturity distribution')
+            ->assertSee('Elements needing attention')
+            ->assertSee('Govern')
+            ->assertSee('Identify')
+            ->assertSeeInOrder(['\\u0022name\\u0022:\\u0022Govern\\u0022', '\\u0022score\\u0022:2', '\\u0022elementCount\\u0022:2'], false)
+            ->assertSee('maturityDistribution')
+            ->assertSee('lowestElements')
+            ->assertSee('\\u0022count\\u0022:30', false);
     }
 
     public function test_dashboard_data_is_scoped_by_role(): void

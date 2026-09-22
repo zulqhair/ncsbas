@@ -31,7 +31,7 @@ class ReviewController extends Controller
         return view('reviews.index', compact('reviews'));
     }
 
-    public function show(Request $request, Review $review)
+    public function show(Request $request, Review $review): View
     {
         $user = $request->user();
         $assigned = $review->reviewer_id === $user->id
@@ -45,11 +45,56 @@ class ReviewController extends Controller
             'comments.user',
         ]);
 
+        $elements = NcsbQuestion::orderBy('number')->get()->groupBy('element_number');
+        $results = $review->assessment->elementResults->keyBy('element_number');
+        $domainMaturity = $elements
+            ->groupBy(fn ($questions) => $questions->first()->domain)
+            ->map(function ($questions, string $domain) use ($results): array {
+                $scores = $questions
+                    ->map(fn ($elementQuestions): float => (float) ($results->get($elementQuestions->first()->element_number)?->maturity_score ?? 0));
+
+                return [
+                    'name' => $domain,
+                    'score' => round($scores->avg() ?? 0, 2),
+                    'elementCount' => $scores->count(),
+                ];
+            })
+            ->values();
+        $elementMaturity = collect(range(1, 33))
+            ->map(function (int $number) use ($elements, $results): array {
+                $result = $results->get($number);
+
+                return [
+                    'number' => $number,
+                    'name' => $result?->element_name ?? $elements->get($number)?->first()?->element_name ?? 'Element '.$number,
+                    'score' => $result?->maturity_score ?? 0,
+                    'maturityLevel' => $result?->maturity_level ?? 'Initial',
+                    'yesCount' => $result?->yes_count ?? 0,
+                ];
+            });
+        $maturityDistribution = collect([
+            ['name' => 'Initial', 'score' => 0],
+            ['name' => 'Basic', 'score' => 1],
+            ['name' => 'Intermediate', 'score' => 2],
+            ['name' => 'Advanced', 'score' => 3],
+        ])->map(fn (array $level): array => [
+            'name' => $level['name'],
+            'count' => $elementMaturity->where('score', $level['score'])->count(),
+        ]);
+        $lowestElements = $elementMaturity
+            ->sort(fn (array $first, array $second): int => $first['score'] <=> $second['score'] ?: $first['number'] <=> $second['number'])
+            ->take(5)
+            ->values();
+
         return view('reviews.show', [
             'review' => $review,
             'assessment' => $review->assessment,
-            'elements' => NcsbQuestion::orderBy('number')->get()->groupBy('element_number'),
-            'results' => $review->assessment->elementResults->keyBy('element_number'),
+            'elements' => $elements,
+            'results' => $results,
+            'domainMaturity' => $domainMaturity,
+            'elementMaturity' => $elementMaturity,
+            'maturityDistribution' => $maturityDistribution,
+            'lowestElements' => $lowestElements,
         ]);
     }
 
