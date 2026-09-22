@@ -40,6 +40,31 @@ function escapeHtml(value) {
     }[character]));
 }
 
+function wrapChartLabel(label) {
+    const maximumLineLength = 14;
+    const lines = [];
+    let line = '';
+
+    String(label).split(' ').forEach((word) => {
+        const nextLine = line === '' ? word : line+' '+word;
+
+        if (nextLine.length > maximumLineLength && line !== '') {
+            lines.push(line);
+            line = word;
+
+            return;
+        }
+
+        line = nextLine;
+    });
+
+    if (line !== '') {
+        lines.push(line);
+    }
+
+    return lines.join('\n');
+}
+
 function createChart(id, option, containerSelector) {
     const element = document.getElementById(id);
 
@@ -333,9 +358,9 @@ function renderReviewChart() {
         color: [dashboardColors.warning],
         grid: {
             top: 16,
-            right: 32,
-            bottom: 20,
-            left: 250,
+            right: 16,
+            bottom: 82,
+            left: 44,
         },
         tooltip: {
             trigger: 'item',
@@ -348,6 +373,17 @@ function renderReviewChart() {
             },
         },
         xAxis: {
+            type: 'category',
+            data: data.lowestElements.map((element) => element.name),
+            axisTick: { show: false },
+            axisLine: { lineStyle: { color: '#e7ecf3' } },
+            axisLabel: {
+                formatter: wrapChartLabel,
+                fontSize: 10,
+                lineHeight: 12,
+            },
+        },
+        yAxis: {
             type: 'value',
             min: 0,
             max: 3,
@@ -355,23 +391,12 @@ function renderReviewChart() {
             axisLabel: { formatter: '{value}' },
             splitLine: { lineStyle: { color: '#e7ecf3' } },
         },
-        yAxis: {
-            type: 'category',
-            inverse: true,
-            data: data.lowestElements.map((element) => element.name),
-            axisTick: { show: false },
-            axisLine: { show: false },
-            axisLabel: {
-                width: 230,
-                overflow: 'truncate',
-            },
-        },
         series: [{
             name: 'Maturity score',
             type: 'bar',
             data: data.lowestElements.map((element) => element.score),
-            barMaxWidth: 26,
-            itemStyle: { borderRadius: [0, 3, 3, 0] },
+            barMaxWidth: 42,
+            itemStyle: { borderRadius: [3, 3, 0, 0] },
         }],
     }, '[data-review-lowest-chart-container]');
 
