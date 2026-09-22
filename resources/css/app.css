@@ -112,6 +112,13 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 .process-number { font-size: .875rem; color: var(--signal); font-weight: 600; margin-bottom: 16px; display: block; }
 .process-list p { color: var(--muted); margin-bottom: 0; }
 .roles-section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 48px; margin-top: 56px; }
+.platform-explainer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 48px; margin-top: 56px; }
+.platform-explainer h2 { margin-bottom: 12px; }
+.benefit-list { margin: 0; }
+.benefit-list > div { padding: 20px 0; display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 24px; border-bottom: 1px solid var(--border); }
+.benefit-list > div:first-child { padding-top: 0; }
+.benefit-list dt { color: var(--ink); font-weight: 600; }
+.benefit-list dd { color: var(--muted); margin: 0; }
 .role-list { margin: 0; }
 .role-list > div { padding: 20px 0; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 24px; border-bottom: 1px solid var(--border); }
 .role-list > div:first-child { padding-top: 0; }
@@ -188,6 +195,7 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 .auth-aside { border-radius: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 48px; }
 .auth-aside h2 { font-size: clamp(1.75rem, 3vw, 2.4rem); max-width: 16ch; }
 .auth-aside .auth-steps { list-style: none; padding: 0; margin: 32px 0 0; }
+.auth-aside a { color: white; }
 .auth-steps li { display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid #ffffff25; }
 .auth-steps span { color: #8bd6e6; }
 .auth-form { padding: clamp(24px, 4vw, 48px); }
@@ -268,7 +276,7 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
     .brand strong { font-size: 1.5rem; }
     .brand-symbol { width: 44px; height: 52px; }
     .brand-description { font-size: .6875rem; }
-    .hero-layout, .auth-layout, .roles-section, .assessment-layout { grid-template-columns: minmax(0, 1fr); }
+    .hero-layout, .auth-layout, .platform-explainer, .roles-section, .assessment-layout { grid-template-columns: minmax(0, 1fr); }
     .hero-layout h1 { max-width: 23ch; }
     .hero-layout { gap: 32px; }
     .baseline-diagram { padding: 20px; }
@@ -282,6 +290,7 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
     .process-list li, .process-list li + li { padding: 24px 0; border-left: 0; }
     .process-list li + li { border-top: 1px solid var(--border); }
     .roles-section { gap: 24px; margin-top: 40px; }
+    .platform-explainer { gap: 24px; margin-top: 40px; }
     .footer-content { flex-direction: column; align-items: flex-start; }
     .footer-meta { gap: 12px 20px; }
     .auth-layout { margin-block: 0; }
@@ -308,6 +317,7 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
     .hero-actions .btn { width: 100%; }
     .domain-list { column-gap: 12px; font-size: 1rem; }
     .role-list > div { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .benefit-list > div { grid-template-columns: minmax(0, 1fr); gap: 8px; }
     .metric { padding: 20px 16px; }
     .card-body, .card-header { padding: 20px; }
     .element-card > summary { padding: 16px; gap: 10px; }

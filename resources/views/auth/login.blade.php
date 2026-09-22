@@ -2,11 +2,11 @@
 @section('title', 'Log in')
 @section('content')
     <div class="auth-layout">
-        <aside class="hero-panel auth-aside" aria-label="About your workspace">
-            <div><p class="eyebrow">NCSBAS workspace</p><h2>Your baseline.<br>A shared view.</h2><p>Continue your assessment, review assigned responses, or oversee progress across the system.</p>
-                <ol class="auth-steps"><li><span>01</span> Assess your cyber security practices</li><li><span>02</span> Review responses and share feedback</li><li><span>03</span> Report your maturity results</li></ol>
+        <aside class="hero-panel auth-aside" aria-label="Why use NCSBAS">
+            <div><p class="eyebrow">NCSB v1.1 digital assessment</p><h2>Why NCSBAS?</h2><p>It turns the NCSB v1.1 Excel self-assessment into a guided workspace for completing, reviewing, and retaining your assessment.</p>
+                <ol class="auth-steps"><li><span>01</span> Guide responses through the NCSB questionnaire</li><li><span>02</span> Calculate element and overall maturity results</li><li><span>03</span> Keep review comments and reports with the assessment</li></ol>
             </div>
-            <p class="mb-0"><x-icon name="shield" /> National Cyber Security Baseline v1.1</p>
+            <p class="mb-0"><x-icon name="info" /> Assessment content follows NCSB v1.1. <a href="https://www.nacsa.gov.my/legal.php" rel="external">View NACSA’s official resources</a>.</p>
         </aside>
         <section class="auth-form" aria-labelledby="login-heading">
             <p class="eyebrow">Welcome back</p><h1 id="login-heading">Log in</h1><p class="text-secondary mb-4">Enter your details to access your workspace.</p>
