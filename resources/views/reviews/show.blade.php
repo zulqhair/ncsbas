@@ -24,7 +24,7 @@
                 <a class="btn btn-sm btn-outline-primary" href="{{ route('reviews.responses', $review) }}" aria-label="View assessment responses"><x-icon name="document" size="18" /><span class="visually-hidden">View assessment responses</span></a>
             </div>
             <div class="chart-container chart-container-radar mt-4" data-review-chart-container hidden>
-                <canvas id="reviewMaturityRadarChart" role="img" aria-label="Radar chart of the 33 assessment element maturity scores, with element names shown around the chart."></canvas>
+                <div id="reviewMaturityRadarChart" role="img" aria-label="Radar chart of the 33 assessment element maturity scores, with element names shown around the chart."></div>
             </div>
         </div>
     </section>

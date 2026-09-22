@@ -1,11 +1,20 @@
-import { Chart, registerables } from 'chart.js';
+import * as echarts from 'echarts/core';
+import { BarChart, LineChart, PieChart, RadarChart } from 'echarts/charts';
+import { AriaComponent, GridComponent, LegendComponent, RadarComponent, TooltipComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
 
-Chart.register(...registerables);
-Chart.defaults.font.family = "'IBM Plex Sans', Arial, sans-serif";
-Chart.defaults.font.size = 14;
-Chart.defaults.color = '#526071';
-Chart.defaults.borderColor = '#e7ecf3';
-Chart.defaults.animation = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { duration: 250 };
+echarts.use([
+    AriaComponent,
+    BarChart,
+    CanvasRenderer,
+    GridComponent,
+    LegendComponent,
+    LineChart,
+    PieChart,
+    RadarChart,
+    RadarComponent,
+    TooltipComponent,
+]);
 
 const dashboardColors = {
     primary: '#0b2e66',
@@ -17,6 +26,85 @@ const dashboardColors = {
     softBlue: '#315d91',
 };
 
+const chartFontFamily = "'IBM Plex Sans', Arial, sans-serif";
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const chartInstances = new Map();
+
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+    }[character]));
+}
+
+function wrapRadarLabel(label) {
+    const maximumLineLength = 18;
+    const lines = [];
+    let line = '';
+
+    String(label).split(' ').forEach((word) => {
+        const nextLine = line === '' ? word : line+' '+word;
+
+        if (nextLine.length > maximumLineLength && line !== '') {
+            lines.push(line);
+            line = word;
+
+            return;
+        }
+
+        line = nextLine;
+    });
+
+    if (line !== '') {
+        lines.push(line);
+    }
+
+    return lines.join('\n');
+}
+
+function createChart(id, option, containerSelector) {
+    const element = document.getElementById(id);
+
+    if (! element) {
+        return;
+    }
+
+    const container = element.closest(containerSelector);
+
+    if (! container) {
+        return;
+    }
+
+    container.hidden = false;
+    chartInstances.get(id)?.dispose();
+
+    try {
+        const chart = echarts.init(element, null, { renderer: 'canvas' });
+
+        chart.setOption({
+            animation: ! reducedMotion,
+            aria: { enabled: true },
+            textStyle: {
+                color: '#526071',
+                fontFamily: chartFontFamily,
+            },
+            ...option,
+        });
+
+        chartInstances.set(id, chart);
+        container.parentElement.querySelector('.chart-data')?.removeAttribute('open');
+    } catch {
+        container.hidden = true;
+    }
+}
+
+window.addEventListener('resize', () => {
+    chartInstances.forEach((chart) => chart.resize());
+});
+
 function renderDashboardCharts() {
     const data = window.ncsbasDashboardData;
 
@@ -24,201 +112,218 @@ function renderDashboardCharts() {
         return;
     }
 
-    const createChart = (id, config) => {
-        const canvas = document.getElementById(id);
-
-        if (canvas) {
-            const container = canvas.closest('[data-chart-container]');
-            container.hidden = false;
-            try {
-                new Chart(canvas, config);
-                container.parentElement.querySelector('.chart-data').open = false;
-            } catch {
-                container.hidden = true;
-            }
-        }
-    };
-
     createChart('assessmentStatusChart', {
-        type: 'doughnut',
-        data: {
-            labels: data.statuses.labels,
-            datasets: [{
-                data: data.statuses.values,
-                backgroundColor: [
-                    dashboardColors.secondary,
-                    dashboardColors.warning,
-                    dashboardColors.primary,
-                    dashboardColors.success,
-                ],
-                borderWidth: 0,
-                hoverOffset: 8,
-            }],
+        color: [
+            dashboardColors.secondary,
+            dashboardColors.warning,
+            dashboardColors.primary,
+            dashboardColors.success,
+        ],
+        tooltip: {
+            trigger: 'item',
+            valueFormatter: (value) => String(value),
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '68%',
-            plugins: {
-                legend: { position: 'bottom' },
-            },
+        legend: {
+            bottom: 0,
+            type: 'scroll',
         },
-    });
+        series: [{
+            type: 'pie',
+            radius: ['50%', '68%'],
+            avoidLabelOverlap: true,
+            label: { show: false },
+            labelLine: { show: false },
+            data: data.statuses.labels.map((label, index) => ({
+                name: label,
+                value: data.statuses.values[index],
+            })),
+        }],
+    }, '[data-chart-container]');
 
     createChart('maturityChart', {
-        type: 'bar',
-        data: {
-            labels: data.maturity.labels,
-            datasets: [{
-                label: 'Assessments',
-                data: data.maturity.values,
-                backgroundColor: [
-                    dashboardColors.secondary,
-                    dashboardColors.warning,
-                    dashboardColors.primary,
-                    dashboardColors.success,
-                ],
-                borderRadius: 3,
-                borderSkipped: false,
-            }],
+        color: [
+            dashboardColors.secondary,
+            dashboardColors.warning,
+            dashboardColors.primary,
+            dashboardColors.success,
+        ],
+        grid: {
+            top: 16,
+            right: 16,
+            bottom: 48,
+            left: 44,
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, ticks: { precision: 0 } },
-                x: { grid: { display: false } },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'shadow' },
+        },
+        xAxis: {
+            type: 'category',
+            data: data.maturity.labels,
+            axisTick: { show: false },
+            axisLine: { lineStyle: { color: '#e7ecf3' } },
+        },
+        yAxis: {
+            type: 'value',
+            minInterval: 1,
+            splitLine: { lineStyle: { color: '#e7ecf3' } },
+        },
+        series: [{
+            name: 'Assessments',
+            type: 'bar',
+            data: data.maturity.values,
+            barMaxWidth: 44,
+            itemStyle: {
+                borderRadius: [3, 3, 0, 0],
             },
-            plugins: { legend: { display: false } },
-        },
-    });
+        }],
+    }, '[data-chart-container]');
 
     createChart('assessmentScoresChart', {
-        type: 'line',
-        data: {
-            labels: data.assessments.map((assessment) => assessment.label),
-            datasets: [{
-                label: 'Overall score (%)',
-                data: data.assessments.map((assessment) => assessment.score),
-                borderColor: dashboardColors.primary,
-                backgroundColor: 'rgba(11, 46, 102, 0.06)',
-                pointBackgroundColor: dashboardColors.primary,
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                fill: false,
-                tension: 0,
-            }],
+        color: [dashboardColors.primary],
+        grid: {
+            top: 24,
+            right: 20,
+            bottom: 48,
+            left: 52,
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, max: 100, ticks: { callback: (value) => `${value}%` } },
-                x: { grid: { display: false } },
-            },
-            plugins: {
-                legend: { position: 'bottom' },
-                tooltip: { callbacks: { label: (context) => `${context.parsed.y}%` } },
-            },
+        tooltip: {
+            trigger: 'axis',
+            valueFormatter: (value) => value+'%',
         },
-    });
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: data.assessments.map((assessment) => assessment.label),
+            axisTick: { show: false },
+            axisLine: { lineStyle: { color: '#e7ecf3' } },
+        },
+        yAxis: {
+            type: 'value',
+            min: 0,
+            max: 100,
+            axisLabel: { formatter: '{value}%' },
+            splitLine: { lineStyle: { color: '#e7ecf3' } },
+        },
+        series: [{
+            name: 'Overall score',
+            type: 'line',
+            data: data.assessments.map((assessment) => assessment.score),
+            symbolSize: 9,
+            lineStyle: { width: 2 },
+            itemStyle: { color: dashboardColors.primary },
+        }],
+    }, '[data-chart-container]');
 
     createChart('elementPerformanceChart', {
-        type: 'bar',
-        data: {
-            labels: data.elements.labels.map((label, index) => 'E' + (index + 1)),
-            datasets: [{
-                label: 'Average maturity score (%)',
-                data: data.elements.values,
-                backgroundColor: dashboardColors.softBlue,
-                hoverBackgroundColor: dashboardColors.primary,
-                borderRadius: 3,
-                borderSkipped: false,
-            }],
+        color: [dashboardColors.softBlue],
+        grid: {
+            top: 20,
+            right: 48,
+            bottom: 24,
+            left: 300,
         },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: { callback: (value) => `${value}%` },
-                },
-                y: { grid: { display: false } },
-            },
-            plugins: {
-                legend: { position: 'bottom' },
-                tooltip: { callbacks: { title: (items) => data.elements.labels[items[0].dataIndex], label: (context) => `${context.parsed.x}%` } },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'shadow' },
+            valueFormatter: (value) => value+'%',
+        },
+        xAxis: {
+            type: 'value',
+            min: 0,
+            max: 100,
+            axisLabel: { formatter: '{value}%' },
+            splitLine: { lineStyle: { color: '#e7ecf3' } },
+        },
+        yAxis: {
+            type: 'category',
+            inverse: true,
+            data: data.elements.labels,
+            axisTick: { show: false },
+            axisLine: { show: false },
+            axisLabel: {
+                width: 280,
+                overflow: 'truncate',
             },
         },
-    });
+        series: [{
+            name: 'Average maturity score',
+            type: 'bar',
+            data: data.elements.values,
+            barMaxWidth: 20,
+            itemStyle: { borderRadius: [0, 3, 3, 0] },
+        }],
+    }, '[data-chart-container]');
 }
 
 function renderReviewChart() {
     const data = window.ncsbasReviewData;
-    const canvas = document.getElementById('reviewMaturityRadarChart');
 
-    if (! data || ! canvas) {
+    if (! data || ! document.getElementById('reviewMaturityRadarChart')) {
         return;
     }
 
-    const container = canvas.closest('[data-review-chart-container]');
-    container.hidden = false;
+    const pointSeries = data.scores.map((score, index) => ({
+        name: data.labels[index],
+        type: 'radar',
+        symbol: 'circle',
+        symbolSize: 9,
+        lineStyle: { opacity: 0 },
+        areaStyle: { opacity: 0 },
+        data: [{
+            value: data.scores.map((value, pointIndex) => pointIndex === index ? value : '-'),
+            elementIndex: index,
+        }],
+    }));
 
-    try {
-        new Chart(canvas, {
+    createChart('reviewMaturityRadarChart', {
+        color: [dashboardColors.primary],
+        tooltip: {
+            trigger: 'item',
+            formatter: (params) => {
+                const index = params.data.elementIndex;
+
+                if (index === undefined) {
+                    return 'Move over a point to see its element details.';
+                }
+
+                return '<strong>Element '+(index + 1)+': '+escapeHtml(data.labels[index])+'</strong>'
+                    +'<br>Maturity: '+escapeHtml(data.maturityLevels[index])+' ('+data.scores[index]+'/3)'
+                    +'<br>Yes responses: '+data.yesCounts[index];
+            },
+        },
+        radar: {
+            center: ['50%', '51%'],
+            radius: '68%',
+            splitNumber: 3,
+            axisName: {
+                color: '#526071',
+                fontFamily: chartFontFamily,
+                fontSize: 10,
+                lineHeight: 13,
+            },
+            splitLine: { lineStyle: { color: '#e7ecf3' } },
+            splitArea: { areaStyle: { color: ['#ffffff', '#fafbfd'] } },
+            axisLine: { lineStyle: { color: '#e7ecf3' } },
+            indicator: data.labels.map((label) => ({
+                name: wrapRadarLabel(label),
+                max: 3,
+            })),
+        },
+        series: [{
+            name: 'Maturity score',
             type: 'radar',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Maturity score',
-                    data: data.scores,
-                    borderColor: dashboardColors.primary,
-                    backgroundColor: 'rgba(11, 46, 102, 0.14)',
-                    pointBackgroundColor: dashboardColors.primary,
-                    pointBorderColor: '#ffffff',
-                    pointHoverRadius: 5,
-                    pointRadius: 2,
-                    borderWidth: 2,
-                }],
+            symbol: 'none',
+            lineStyle: {
+                color: dashboardColors.primary,
+                width: 2,
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    intersect: false,
-                    mode: 'nearest',
-                },
-                scales: {
-                    r: {
-                        min: 0,
-                        max: 3,
-                        ticks: {
-                            stepSize: 1,
-                            showLabelBackdrop: false,
-                        },
-                        pointLabels: {
-                            font: { size: 10 },
-                        },
-                    },
-                },
-                plugins: {
-                    legend: { position: 'bottom' },
-                    tooltip: {
-                        callbacks: {
-                            title: (items) => 'Element '+(items[0].dataIndex + 1)+': '+data.labels[items[0].dataIndex],
-                            label: (context) => 'Maturity: '+data.maturityLevels[context.dataIndex]+' ('+context.parsed.r+'/3)',
-                            afterLabel: (context) => 'Yes responses: '+data.yesCounts[context.dataIndex],
-                        },
-                    },
-                },
+            areaStyle: {
+                color: 'rgba(11, 46, 102, 0.14)',
             },
-        });
-    } catch {
-        container.hidden = true;
-    }
+            data: [{ value: data.scores }],
+        }, ...pointSeries],
+    }, '[data-review-chart-container]');
 }
 
 function setupNavigation() {
