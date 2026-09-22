@@ -10,7 +10,32 @@
             <div class="table-responsive" role="region" aria-label="Review assignments" tabindex="0">
                 <table class="table align-middle"><thead><tr><th scope="col">Assessment</th><th scope="col">Assessor</th><th scope="col">Reviewer</th><th scope="col">Status</th><th scope="col">Overall maturity</th><th scope="col">Updated</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead><tbody>
                     @foreach($reviews as $review)
-                        <tr><td><a class="table-link" href="{{ route('reviews.show', $review) }}">#{{ $review->assessment->id }}</a></td><td>{{ $review->assessment->user->name }}</td><td>{{ $review->reviewer?->name ?? 'Unassigned' }}</td><td><x-status-badge :status="$review->status" /></td><td>{{ $review->assessment->overall_maturity_level ?? 'Not calculated' }}</td><td class="text-nowrap"><time datetime="{{ $review->updated_at->toIso8601String() }}">{{ $review->updated_at->format('d M Y') }}</time></td><td><a class="btn btn-sm btn-outline-primary text-nowrap" href="{{ route('reviews.show', $review) }}" aria-label="Open review for assessment {{ $review->assessment->id }}">Open review <x-icon name="arrow" size="16" /></a></td></tr>
+                        <tr>
+                            <td>
+                                @if($review->status === 'pending' && ! auth()->user()->isAdmin())
+                                    #{{ $review->assessment->id }}
+                                @else
+                                    <a class="table-link" href="{{ route('reviews.show', $review) }}">#{{ $review->assessment->id }}</a>
+                                @endif
+                            </td>
+                            <td>{{ $review->assessment->user->name }}</td>
+                            <td>{{ $review->reviewer?->name ?? 'Unassigned' }}</td>
+                            <td><x-status-badge :status="$review->status" /></td>
+                            <td>{{ $review->assessment->overall_maturity_level ?? 'Not calculated' }}</td>
+                            <td class="text-nowrap"><time datetime="{{ $review->updated_at->toIso8601String() }}">{{ $review->updated_at->format('d M Y') }}</time></td>
+                            <td>
+                                @if($review->status === 'pending' && ! auth()->user()->isAdmin())
+                                    <form method="POST" action="{{ route('reviews.update', $review) }}" data-loading-form>
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="action" value="accept">
+                                        <button class="btn btn-sm btn-primary text-nowrap" type="submit" data-loading-label="Accepting…" aria-label="Accept review for assessment {{ $review->assessment->id }}"><x-icon name="check" size="16" /> Accept review</button>
+                                    </form>
+                                @else
+                                    <a class="btn btn-sm btn-outline-primary text-nowrap" href="{{ route('reviews.show', $review) }}" aria-label="Open review for assessment {{ $review->assessment->id }}">Open review <x-icon name="arrow" size="16" /></a>
+                                @endif
+                            </td>
+                        </tr>
                     @endforeach
                 </tbody></table>
             </div>

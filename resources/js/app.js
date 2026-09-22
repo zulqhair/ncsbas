@@ -156,6 +156,71 @@ function renderDashboardCharts() {
     });
 }
 
+function renderReviewChart() {
+    const data = window.ncsbasReviewData;
+    const canvas = document.getElementById('reviewMaturityRadarChart');
+
+    if (! data || ! canvas) {
+        return;
+    }
+
+    const container = canvas.closest('[data-review-chart-container]');
+    container.hidden = false;
+
+    try {
+        new Chart(canvas, {
+            type: 'radar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Maturity score',
+                    data: data.scores,
+                    borderColor: dashboardColors.primary,
+                    backgroundColor: 'rgba(11, 46, 102, 0.14)',
+                    pointBackgroundColor: dashboardColors.primary,
+                    pointBorderColor: '#ffffff',
+                    pointHoverRadius: 5,
+                    pointRadius: 2,
+                    borderWidth: 2,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'nearest',
+                },
+                scales: {
+                    r: {
+                        min: 0,
+                        max: 3,
+                        ticks: {
+                            stepSize: 1,
+                            showLabelBackdrop: false,
+                        },
+                        pointLabels: {
+                            font: { size: 10 },
+                        },
+                    },
+                },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            title: (items) => 'Element '+(items[0].dataIndex + 1)+': '+data.labels[items[0].dataIndex],
+                            label: (context) => 'Maturity: '+data.maturityLevels[context.dataIndex]+' ('+context.parsed.r+'/3)',
+                            afterLabel: (context) => 'Yes responses: '+data.yesCounts[context.dataIndex],
+                        },
+                    },
+                },
+            },
+        });
+    } catch {
+        container.hidden = true;
+    }
+}
+
 function setupNavigation() {
     const toggle = document.querySelector('[data-menu-toggle]');
     const nav = document.getElementById('primary-navigation');
@@ -311,7 +376,10 @@ function initialize() {
         });
     });
     document.querySelector('[data-error-summary]')?.focus();
-    document.fonts.ready.then(renderDashboardCharts);
+    document.fonts.ready.then(() => {
+        renderDashboardCharts();
+        renderReviewChart();
+    });
 }
 
 if (document.readyState === 'loading') {

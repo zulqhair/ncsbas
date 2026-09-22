@@ -8,6 +8,7 @@ use App\Models\Review;
 use App\Models\ReviewComment;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ReviewController extends Controller
 {
@@ -34,13 +35,12 @@ class ReviewController extends Controller
     {
         $user = $request->user();
         $assigned = $review->reviewer_id === $user->id
-            && in_array($review->status, ['pending', 'accepted', 'completed'], true);
+            && in_array($review->status, ['accepted', 'completed'], true);
         abort_unless($user->isAdmin() || $assigned, 403);
 
         $review->load([
             'assessment.user',
             'assessment.elementResults',
-            'assessment.responses',
             'reviewer',
             'comments.user',
         ]);
@@ -49,8 +49,28 @@ class ReviewController extends Controller
             'review' => $review,
             'assessment' => $review->assessment,
             'elements' => NcsbQuestion::orderBy('number')->get()->groupBy('element_number'),
-            'answers' => $review->assessment->responses->pluck('answer', 'ncsb_question_id'),
             'results' => $review->assessment->elementResults->keyBy('element_number'),
+        ]);
+    }
+
+    public function responses(Request $request, Review $review): View
+    {
+        $user = $request->user();
+        $assigned = $review->reviewer_id === $user->id
+            && in_array($review->status, ['accepted', 'completed'], true);
+        abort_unless($user->isAdmin() || $assigned, 403);
+
+        $review->load([
+            'assessment.user',
+            'assessment.responses',
+            'reviewer',
+        ]);
+
+        return view('reviews.responses', [
+            'review' => $review,
+            'assessment' => $review->assessment,
+            'elements' => NcsbQuestion::orderBy('number')->get()->groupBy('element_number'),
+            'answers' => $review->assessment->responses->pluck('answer', 'ncsb_question_id'),
         ]);
     }
 
@@ -171,7 +191,7 @@ class ReviewController extends Controller
     {
         $user = $request->user();
         $assigned = $review->reviewer_id === $user->id
-            && in_array($review->status, ['pending', 'accepted', 'completed'], true);
+            && in_array($review->status, ['accepted', 'completed'], true);
         abort_unless(
             $user->isAdmin()
                 || $assigned

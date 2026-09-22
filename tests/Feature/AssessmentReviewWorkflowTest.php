@@ -151,16 +151,35 @@ class AssessmentReviewWorkflowTest extends TestCase
             ->get('/reviews')
             ->assertOk()
             ->assertSee('Reviewer Module')
-            ->assertSee('Open review');
+            ->assertSee('Accept review')
+            ->assertDontSee('Open review');
+        $this->actingAs($reviewer)
+            ->get('/reviews/'.$review->id)
+            ->assertForbidden();
+        $this->actingAs($reviewer)
+            ->get('/reviews/'.$review->id.'/responses')
+            ->assertForbidden();
+        $this->actingAs($admin)->get('/reviews')->assertOk()->assertSee('Reviewer Module');
+        $this->actingAs($otherReviewer)->get('/assessments/'.$assessment->id)->assertForbidden();
+        $this->actingAs($reviewer)->get('/assessments/'.$assessment->id)->assertForbidden();
+        $this->actingAs($reviewer)->get('/assessments/'.$assessment->id.'/report')->assertForbidden();
+        $this->actingAs($reviewer)->patch('/reviews/'.$review->id, ['action' => 'accept'])->assertSessionHas('status');
         $this->actingAs($reviewer)
             ->get('/reviews/'.$review->id)
             ->assertOk()
             ->assertSee('Review actions')
-            ->assertSee('Assessment responses');
-        $this->actingAs($admin)->get('/reviews')->assertOk()->assertSee('Reviewer Module');
-        $this->actingAs($otherReviewer)->get('/assessments/'.$assessment->id)->assertForbidden();
+            ->assertSee('Element maturity profile')
+            ->assertDontSee('33 element results')
+            ->assertSee(route('reviews.responses', $review), false)
+            ->assertSee('maturityLevels')
+            ->assertSee('yesCounts')
+            ->assertDontSee('All assessment responses');
+        $this->actingAs($reviewer)
+            ->get('/reviews/'.$review->id.'/responses')
+            ->assertOk()
+            ->assertSee('Assessment responses')
+            ->assertSee('This response record is read only.');
         $this->actingAs($reviewer)->get('/assessments/'.$assessment->id)->assertOk()->assertSee('Review by');
-        $this->actingAs($reviewer)->patch('/reviews/'.$review->id, ['action' => 'accept'])->assertSessionHas('status');
         $this->actingAs($reviewer)
             ->post('/reviews/'.$review->id.'/comments', ['body' => 'Please confirm the evidence.'])
             ->assertSessionHas('status');

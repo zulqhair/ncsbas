@@ -15,7 +15,7 @@ class AssessmentReportController extends Controller
         $user = $request->user();
         $assigned = $assessment->reviews()
             ->where('reviewer_id', $user->id)
-            ->whereIn('status', ['pending', 'accepted', 'completed'])
+            ->whereIn('status', ['accepted', 'completed'])
             ->exists();
         abort_unless($assessment->user_id === $user->id || $user->isAdmin() || $assigned, 403);
         $assessment->load('elementResults', 'user');

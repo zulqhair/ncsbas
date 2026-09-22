@@ -80,6 +80,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->name('reviews.request');
     Route::get('/reviews', [ReviewController::class, 'index'])
         ->name('reviews.index');
+    Route::get('/reviews/{review}/responses', [ReviewController::class, 'responses'])
+        ->name('reviews.responses');
     Route::get('/reviews/{review}', [ReviewController::class, 'show'])
         ->name('reviews.show');
     Route::patch('/reviews/{review}', [ReviewController::class, 'update'])

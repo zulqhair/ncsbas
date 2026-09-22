@@ -22,7 +22,7 @@ class AssessmentController extends Controller
                 'reviews',
                 fn ($query) => $query
                     ->where('reviewer_id', $user->id)
-                    ->whereIn('status', ['pending', 'accepted', 'completed'])
+                    ->whereIn('status', ['accepted', 'completed'])
             )
                 ->with('user')->latest()->get();
         } else {
@@ -48,7 +48,7 @@ class AssessmentController extends Controller
         $isAdmin = $user->isAdmin();
         $isAssignedReviewer = $assessment->reviews()
             ->where('reviewer_id', $user->id)
-            ->whereIn('status', ['pending', 'accepted', 'completed'])
+            ->whereIn('status', ['accepted', 'completed'])
             ->exists();
         abort_unless($isOwner || $isAdmin || $isAssignedReviewer, 403);
 
