@@ -22,6 +22,11 @@ class Assessment extends Model
         return $this->hasMany(AssessmentResponse::class);
     }
 
+    public function details(): HasMany
+    {
+        return $this->hasMany(AssessmentDetail::class);
+    }
+
     public function elementResults(): HasMany
     {
         return $this->hasMany(AssessmentElementResult::class);

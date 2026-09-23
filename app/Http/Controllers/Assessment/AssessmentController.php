@@ -42,6 +42,7 @@ class AssessmentController extends Controller
         return view('assessments.show', [
             'assessment' => $assessment->load([
                 'user',
+                'details',
                 'reviews.reviewer',
                 'reviews.comments.user',
             ]),
@@ -55,7 +56,11 @@ class AssessmentController extends Controller
                 ->whereIn('role', [User::ROLE_REVIEWER, User::ROLE_ADMIN])
                 ->orderBy('name')
                 ->get(),
-            'canEdit' => ($isOwner || $isAdmin) && $assessment->status === 'draft',
+            'canManageDetails' => ($isOwner || $isAdmin) && $assessment->status === 'draft',
+            'hasDetails' => $assessment->details->isNotEmpty(),
+            'canEdit' => ($isOwner || $isAdmin)
+                && $assessment->status === 'draft'
+                && $assessment->details->isNotEmpty(),
             'canAssignReview' => $isAdmin || ($isOwner && $assessment->status === 'draft'),
         ]);
     }
@@ -71,6 +76,11 @@ class AssessmentController extends Controller
             422,
             'This assessment is locked after review is requested.'
         );
+        if ($assessment->details()->doesntExist()) {
+            return back()->withErrors([
+                'assessment' => 'Add at least one assessment detail before answering the questionnaire.',
+            ]);
+        }
         $questions = NcsbQuestion::query()->orderBy('number')->get();
         $submittedAnswers = $request->input('answers', []);
         $submittedAnswers = is_array($submittedAnswers) ? $submittedAnswers : [];

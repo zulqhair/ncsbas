@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ModulePermissionController;
 use App\Http\Controllers\Admin\UserRoleController;
 use App\Http\Controllers\Assessment\AssessmentController;
+use App\Http\Controllers\Assessment\AssessmentDetailController;
 use App\Http\Controllers\Assessment\AssessmentReportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -75,6 +76,15 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::put('/assessments/{assessment}', [AssessmentController::class, 'save'])
             ->middleware('throttle:sensitive')
             ->name('assessments.save');
+        Route::post('/assessments/{assessment}/details', [AssessmentDetailController::class, 'store'])
+            ->middleware('throttle:sensitive')
+            ->name('assessments.details.store');
+        Route::put('/assessments/{assessment}/details/{detail}', [AssessmentDetailController::class, 'update'])
+            ->middleware('throttle:sensitive')
+            ->name('assessments.details.update');
+        Route::delete('/assessments/{assessment}/details/{detail}', [AssessmentDetailController::class, 'destroy'])
+            ->middleware('throttle:sensitive')
+            ->name('assessments.details.destroy');
         Route::get('/assessments/{assessment}/report', [AssessmentReportController::class, 'download'])
             ->name('assessments.report');
         Route::post('/assessments/{assessment}/reviews', [ReviewController::class, 'request'])

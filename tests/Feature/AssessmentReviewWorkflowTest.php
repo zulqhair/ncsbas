@@ -30,6 +30,7 @@ class AssessmentReviewWorkflowTest extends TestCase
 
         $this->actingAs($assessor)->post('/assessments')->assertRedirect();
         $assessment = Assessment::firstOrFail();
+        $assessment->details()->create(['label' => 'Organisation name', 'value' => 'NCSB Agency']);
         $this->actingAs($assessor)
             ->put('/assessments/'.$assessment->id, ['answers' => [1 => 'Yes', 2 => 'Yes', 3 => 'No']])
             ->assertSessionHas('status');
@@ -78,6 +79,7 @@ class AssessmentReviewWorkflowTest extends TestCase
 
         $this->actingAs($assessor)->post('/assessments')->assertRedirect();
         $assessment = Assessment::firstOrFail();
+        $assessment->details()->create(['label' => 'Organisation name', 'value' => 'NCSB Agency']);
 
         $this->actingAs($assessor)
             ->post('/assessments/'.$assessment->id.'/reviews', ['reviewer_id' => $reviewer->id])
@@ -141,6 +143,7 @@ class AssessmentReviewWorkflowTest extends TestCase
         $otherReviewer = User::factory()->create(['role' => User::ROLE_REVIEWER]);
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $assessment = Assessment::create(['user_id' => $assessor->id]);
+        $assessment->details()->create(['label' => 'Organisation name', 'value' => 'NCSB Agency']);
 
         $this->actingAs($assessor)
             ->post('/assessments/'.$assessment->id.'/reviews', ['reviewer_id' => $reviewer->id])
@@ -205,6 +208,7 @@ class AssessmentReviewWorkflowTest extends TestCase
         $replacement = User::factory()->create(['role' => User::ROLE_REVIEWER]);
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $assessment = Assessment::create(['user_id' => $assessor->id]);
+        $assessment->details()->create(['label' => 'Organisation name', 'value' => 'NCSB Agency']);
 
         $this->actingAs($assessor)
             ->post('/assessments/'.$assessment->id.'/reviews', ['reviewer_id' => $reviewer->id])

@@ -8,8 +8,51 @@
     <a class="breadcrumb-link" href="{{ route('assessments.index') }}"><x-icon name="back" size="16" /> Assessments</a>
     <div class="page-heading">
         <div><p class="eyebrow">NCSB v1.1 · Questionnaire</p><h1>Assessment #{{ $assessment->id }}</h1><p>{{ $assessment->user->name }} <span class="mx-2" aria-hidden="true">/</span> <x-status-badge :status="$assessment->status" /></p></div>
-        <a class="btn btn-outline-primary" href="{{ route('assessments.report', $assessment) }}"><x-icon name="download" /> Download PDF</a>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-primary" type="button" data-open-assessment-details><x-icon name="document" /> Assessment details <span class="badge text-bg-light">{{ $assessment->details->count() }}</span></button>
+            <a class="btn btn-outline-primary" href="{{ route('assessments.report', $assessment) }}"><x-icon name="download" /> Download PDF</a>
+        </div>
     </div>
+    <dialog class="assessment-details-modal" aria-labelledby="assessment-details-title" data-assessment-details-modal @if((! $hasDetails && $canManageDetails) || $errors->has('label') || $errors->has('value')) data-open-on-load @endif>
+        <div class="assessment-details-modal-header">
+            <div><p class="eyebrow mb-1">Assessment setup</p><h2 class="mb-0" id="assessment-details-title">Assessment details</h2></div>
+            <button class="btn-close" type="button" aria-label="Close assessment details" data-close-assessment-details></button>
+        </div>
+        <p class="text-secondary">Record the context for this assessment. Add at least one detail before answering the questionnaire.</p>
+        @if($canManageDetails)
+            <form method="POST" action="{{ route('assessments.details.store', $assessment) }}" class="assessment-detail-form" data-loading-form>
+                @csrf
+                <div><label class="form-label" for="detail-label">Detail name</label><input class="form-control" id="detail-label" name="label" maxlength="120" required placeholder="e.g. Organisation name" value="{{ old('label') }}"></div>
+                <div><label class="form-label" for="detail-value">Detail value</label><textarea class="form-control" id="detail-value" name="value" rows="3" maxlength="2000" required placeholder="Enter the detail">{{ old('value') }}</textarea></div>
+                <div class="assessment-detail-form-actions"><button class="btn btn-primary" type="submit" data-loading-label="Adding detail…"><x-icon name="plus" /> Add detail</button></div>
+            </form>
+        @endif
+        <div class="assessment-detail-list" aria-live="polite">
+            @forelse($assessment->details as $detail)
+                <article class="assessment-detail-item">
+                    <div><h3>{{ $detail->label }}</h3><p>{!! nl2br(e($detail->value)) !!}</p></div>
+                    @if($canManageDetails)
+                        <div class="assessment-detail-actions">
+                            <button class="btn btn-sm btn-outline-primary" type="button" data-edit-assessment-detail data-detail-label="{{ $detail->label }}" data-detail-value="{{ $detail->value }}" data-update-url="{{ route('assessments.details.update', [$assessment, $detail]) }}">Edit</button>
+                            <form method="POST" action="{{ route('assessments.details.destroy', [$assessment, $detail]) }}" data-loading-form>@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger" type="submit" data-loading-label="Deleting…">Delete</button></form>
+                        </div>
+                    @endif
+                </article>
+            @empty
+                <div class="empty-state assessment-details-empty"><x-icon name="document" size="28" /><h3>No details added yet</h3><p>Add the first detail to unlock the questionnaire.</p></div>
+            @endforelse
+        </div>
+        @if($canManageDetails)
+            <form method="POST" class="assessment-detail-form" data-edit-assessment-detail-form hidden data-loading-form>
+                @csrf @method('PUT')
+                <div class="d-flex justify-content-between align-items-center gap-3"><h3 class="h5 mb-0">Edit detail</h3><button class="btn btn-sm btn-outline-secondary" type="button" data-cancel-assessment-detail-edit>Cancel</button></div>
+                <div><label class="form-label" for="edit-detail-label">Detail name</label><input class="form-control" id="edit-detail-label" name="label" maxlength="120" required></div>
+                <div><label class="form-label" for="edit-detail-value">Detail value</label><textarea class="form-control" id="edit-detail-value" name="value" rows="3" maxlength="2000" required></textarea></div>
+                <div class="assessment-detail-form-actions"><button class="btn btn-primary" type="submit" data-loading-label="Saving detail…">Save changes</button></div>
+            </form>
+        @endif
+        <div class="assessment-details-modal-footer"><button class="btn btn-outline-secondary" type="button" data-close-assessment-details>Close</button></div>
+    </dialog>
     <ol class="workflow-strip" aria-label="Assessment workflow">
         @foreach($workflow as $state => $label)<li @if($assessment->status === $state) aria-current="step" @endif><span>0{{ $loop->iteration }}</span>{{ $label }}</li>@endforeach
     </ol>
@@ -21,9 +64,11 @@
         </dl>
     @endif
     <div class="notice alert alert-info"><x-icon :name="$canEdit ? 'info' : 'lock'" /><div>
-        @if($canEdit)<strong>Work through each element in sequence.</strong><p class="mb-0">Selecting <strong>No</strong> skips the remaining questions in that element. Save your draft before submitting it for review.</p>
+        @if(! $hasDetails)<strong>Add assessment details before you begin.</strong><p class="mb-0">Use the Assessment details button to add the organisation, scope, or other context for this assessment. The questionnaire will unlock after you save a detail.</p>
+        @elseif($canEdit)<strong>Work through each element in sequence.</strong><p class="mb-0">Selecting <strong>No</strong> skips the remaining questions in that element. Save your draft before submitting it for review.</p>
         @else<strong>This assessment is read only.</strong><p class="mb-0">{{ $assessment->status === 'draft' ? 'Only the assessor or an administrator can edit this draft.' : 'Responses are locked after submission. You can view the answers, review comments, and download the report.' }}</p>@endif
     </div></div>
+    @if($hasDetails)
     <div class="assessment-layout">
         <aside class="element-navigation">
             <details open><summary>Assessment elements <span class="text-secondary">({{ $elements->count() }})</span></summary>
@@ -95,4 +140,9 @@
             @endforeach
         </div>
     </div>
+    @else
+        <section class="card assessment-details-gate" aria-labelledby="details-gate-heading">
+            <div class="card-body"><x-icon name="document" size="32" /><div><h2 id="details-gate-heading">Set up this assessment first</h2><p class="mb-0">Add at least one assessment detail before the NCSB questions can be answered.</p></div>@if($canManageDetails)<button class="btn btn-primary" type="button" data-open-assessment-details>Add assessment details</button>@endif</div>
+        </section>
+    @endif
 @endsection

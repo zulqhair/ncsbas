@@ -561,6 +561,52 @@ function setupSequentialQuestionnaire() {
     refresh();
 }
 
+function setupAssessmentDetailsModal() {
+    const modal = document.querySelector('[data-assessment-details-modal]');
+
+    if (! modal) {
+        return;
+    }
+
+    const open = () => {
+        if (! modal.open) {
+            modal.showModal();
+        }
+    };
+    const close = () => modal.close();
+    const editForm = modal.querySelector('[data-edit-assessment-detail-form]');
+
+    document.querySelectorAll('[data-open-assessment-details]').forEach((button) => {
+        button.addEventListener('click', open);
+    });
+    modal.querySelectorAll('[data-close-assessment-details]').forEach((button) => {
+        button.addEventListener('click', close);
+    });
+    modal.querySelectorAll('[data-edit-assessment-detail]').forEach((button) => {
+        button.addEventListener('click', () => {
+            if (! editForm) {
+                return;
+            }
+
+            editForm.action = button.dataset.updateUrl;
+            editForm.querySelector('[name="label"]').value = button.dataset.detailLabel;
+            editForm.querySelector('[name="value"]').value = button.dataset.detailValue;
+            editForm.hidden = false;
+            editForm.querySelector('[name="label"]').focus();
+        });
+    });
+    modal.querySelector('[data-cancel-assessment-detail-edit]')?.addEventListener('click', () => {
+        if (editForm) {
+            editForm.hidden = true;
+            editForm.reset();
+        }
+    });
+
+    if (modal.hasAttribute('data-open-on-load')) {
+        open();
+    }
+}
+
 function setupForms() {
     document.querySelectorAll('[data-loading-form]').forEach((form) => {
         form.addEventListener('submit', (event) => {
@@ -592,6 +638,7 @@ function setupForms() {
 
 function initialize() {
     setupNavigation();
+    setupAssessmentDetailsModal();
     setupSequentialQuestionnaire();
     setupForms();
     document.querySelectorAll('[data-element-link]').forEach((link) => {

@@ -261,6 +261,26 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 .response-row strong { flex-shrink: 0; font-size: .875rem; }
 .role-form { display: flex; align-items: center; gap: 12px; }
 .role-form .form-select { min-width: 140px; }
+.assessment-details-gate .card-body { display: flex; align-items: center; gap: 16px; }
+.assessment-details-gate .icon { color: var(--navy); flex-shrink: 0; }
+.assessment-details-gate h2 { font-size: 1.25rem; margin-bottom: 6px; }
+.assessment-details-gate .btn { margin-left: auto; flex-shrink: 0; }
+.assessment-details-modal { width: min(680px, calc(100% - 32px)); max-height: min(760px, calc(100vh - 32px)); margin: auto; padding: 0; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 24px 64px #0613293d; }
+.assessment-details-modal::backdrop { background: #0613298f; }
+.assessment-details-modal > p, .assessment-detail-form, .assessment-detail-list { margin-inline: 28px; }
+.assessment-details-modal > p { margin-top: 24px; margin-bottom: 20px; }
+.assessment-details-modal-header, .assessment-details-modal-footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 20px 28px; border-bottom: 1px solid var(--border); }
+.assessment-details-modal-footer { justify-content: flex-end; border-top: 1px solid var(--border); border-bottom: 0; margin-top: 24px; }
+.assessment-detail-form { display: grid; gap: 16px; padding: 20px; background: #f8fafd; border: 1px solid var(--border); border-radius: 6px; }
+.assessment-detail-form textarea { resize: vertical; }
+.assessment-detail-form-actions { display: flex; justify-content: flex-end; }
+.assessment-detail-list { display: grid; gap: 12px; margin-top: 24px; }
+.assessment-detail-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px 20px; border: 1px solid var(--border); border-radius: 6px; }
+.assessment-detail-item h3 { font-size: 1rem; margin: 0 0 5px; }
+.assessment-detail-item p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; color: var(--muted); }
+.assessment-detail-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+.assessment-details-empty { padding: 28px 20px; border: 1px dashed #8292a9; border-radius: 6px; }
+.assessment-details-empty h3 { font-size: 1.0625rem; }
 @media (min-width: 1024px) { .menu-toggle { display: none; } }
 @media (max-width: 1023.98px) {
     .primary-navigation { flex-direction: column; gap: 0; padding-bottom: 12px; }
@@ -328,6 +348,11 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
     .element-questions { padding-inline: 16px; }
     .save-dock { position: static; }
     .save-dock .btn, .review-submission-row .btn { width: 100%; }
+    .assessment-details-gate .card-body, .assessment-detail-item { align-items: stretch; flex-direction: column; }
+    .assessment-details-gate .btn { margin-left: 0; }
+    .assessment-details-modal > p, .assessment-detail-form, .assessment-detail-list { margin-inline: 16px; }
+    .assessment-details-modal-header, .assessment-details-modal-footer { padding-inline: 16px; }
+    .assessment-detail-actions { justify-content: flex-start; }
     .chart-data { margin: 20px -20px -20px; }
     .table-toolbar { padding: 16px 20px; }
 }

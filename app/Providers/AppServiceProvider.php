@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -24,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        DB::prohibitDestructiveCommands(! $this->usesTestDatabase());
+
         Password::defaults(function (): Password {
             $password = Password::min(10)->max(128);
 
@@ -57,5 +60,13 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('sensitive', function (Request $request): Limit {
             return Limit::perMinute(30)->by('sensitive:'.($request->user()?->getAuthIdentifier() ?? $request->ip()));
         });
+    }
+
+    private function usesTestDatabase(): bool
+    {
+        $connection = config('database.default');
+        $database = config("database.connections.{$connection}.database");
+
+        return $database === ':memory:' || (is_string($database) && str_ends_with($database, '_test'));
     }
 }

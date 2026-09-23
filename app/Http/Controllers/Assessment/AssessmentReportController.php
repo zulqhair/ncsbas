@@ -18,7 +18,7 @@ class AssessmentReportController extends Controller
             ->whereIn('status', ['accepted', 'completed'])
             ->exists();
         abort_unless($assessment->user_id === $user->id || $user->isAdmin() || $assigned, 403);
-        $assessment->load('elementResults', 'user');
+        $assessment->load('details', 'elementResults', 'user');
         $elements = NcsbQuestion::orderBy('number')->get()->groupBy('element_number');
         $results = $assessment->elementResults->keyBy('element_number');
 

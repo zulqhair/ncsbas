@@ -130,9 +130,9 @@ class ReviewController extends Controller
             ]);
         }
 
-        if (! $adminReassignment && ! $this->assessmentIsComplete($assessment)) {
+        if (! $adminReassignment && ($assessment->details()->doesntExist() || ! $this->assessmentIsComplete($assessment))) {
             return back()->withErrors([
-                'assessment' => 'Complete every element in sequence before submitting the assessment.',
+                'assessment' => 'Add assessment details and complete every element in sequence before submitting the assessment.',
             ]);
         }
 

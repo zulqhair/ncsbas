@@ -22,6 +22,17 @@
         Overall maturity: {{ $assessment->overall_maturity_level ?? 'Not calculated' }}
     </p>
 
+    @if($assessment->details->isNotEmpty())
+        <h2>Assessment details</h2>
+        <table width="100%">
+            <tbody>
+                @foreach($assessment->details as $detail)
+                    <tr><th width="30%">{{ $detail->label }}</th><td>{{ $detail->value }}</td></tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
     <table width="100%">
         <thead>
             <tr>

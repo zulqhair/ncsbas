@@ -64,6 +64,7 @@ class FrontendExperienceTest extends TestCase
     {
         $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
         $assessment = Assessment::create(['user_id' => $assessor->id]);
+        $assessment->details()->create(['label' => 'Organisation name', 'value' => 'NCSB Agency']);
         $question = NcsbQuestion::create([
             'number' => 1,
             'domain' => 'Govern',
@@ -96,6 +97,7 @@ class FrontendExperienceTest extends TestCase
         $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $assessment = Assessment::create(['user_id' => $assessor->id, 'status' => 'open']);
+        $assessment->details()->create(['label' => 'Organisation name', 'value' => 'NCSB Agency']);
 
         $this->actingAs($admin)->get('/assessments/'.$assessment->id)
             ->assertOk()
@@ -146,6 +148,7 @@ class FrontendExperienceTest extends TestCase
         $reviewer = User::factory()->create(['name' => 'Rashid Review', 'role' => User::ROLE_REVIEWER]);
         $admin = User::factory()->create(['name' => 'System Administrator', 'role' => User::ROLE_ADMIN]);
         $draft = Assessment::create(['user_id' => $assessor->id]);
+        $draft->details()->create(['label' => 'Organisation name', 'value' => 'NCSB Agency']);
 
         foreach (range(1, 33) as $element) {
             foreach (range(1, 3) as $index) {
