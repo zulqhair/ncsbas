@@ -17,8 +17,8 @@ class AssessmentReviewWorkflowTest extends TestCase
     public function test_assessment_answers_are_scored_and_results_are_visible(): void
     {
         $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
-        foreach (range(1, 3) as $number) {
-            NcsbQuestion::create([
+        $questions = collect(range(1, 3))->map(function (int $number): NcsbQuestion {
+            return NcsbQuestion::create([
                 'number' => $number,
                 'domain' => 'Governance',
                 'category' => 'Test',
@@ -26,13 +26,19 @@ class AssessmentReviewWorkflowTest extends TestCase
                 'element_name' => 'Test element',
                 'question' => 'Question '.$number,
             ]);
-        }
+        });
 
         $this->actingAs($assessor)->post('/assessments')->assertRedirect();
         $assessment = Assessment::firstOrFail();
         $assessment->details()->create(['label' => 'Organisation name', 'value' => 'NCSB Agency']);
         $this->actingAs($assessor)
-            ->put('/assessments/'.$assessment->id, ['answers' => [1 => 'Yes', 2 => 'Yes', 3 => 'No']])
+            ->put('/assessments/'.$assessment->id, [
+                'answers' => [
+                    $questions[0]->id => 'Yes',
+                    $questions[1]->id => 'Yes',
+                    $questions[2]->id => 'No',
+                ],
+            ])
             ->assertSessionHas('status');
         $this->assertDatabaseHas('assessment_element_results', [
             'assessment_id' => $assessment->id,

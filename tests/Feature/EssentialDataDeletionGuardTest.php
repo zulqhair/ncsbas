@@ -6,10 +6,13 @@ use App\Models\Assessment;
 use App\Models\NcsbQuestion;
 use App\Models\User;
 use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class EssentialDataDeletionGuardTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_baseline_questions_cannot_be_deleted_or_truncated(): void
     {
         NcsbQuestion::create([

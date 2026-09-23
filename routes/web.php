@@ -76,6 +76,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::put('/assessments/{assessment}', [AssessmentController::class, 'save'])
             ->middleware('throttle:sensitive')
             ->name('assessments.save');
+        Route::post('/assessments/{assessment}/import', [AssessmentController::class, 'import'])
+            ->middleware('throttle:sensitive')
+            ->name('assessments.import');
         Route::post('/assessments/{assessment}/details', [AssessmentDetailController::class, 'store'])
             ->middleware('throttle:sensitive')
             ->name('assessments.details.store');

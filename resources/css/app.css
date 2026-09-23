@@ -240,6 +240,10 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 .save-dock { position: sticky; bottom: 16px; background: white; border: 1px solid var(--border); border-top: 3px solid var(--navy); padding: 16px 20px; display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 12px; border-radius: 6px; box-shadow: 0 4px 16px #071a3d12; z-index: 10; }
 .save-dock p { margin: 0; font-size: 1rem; }
 .save-dock strong { display: block; color: var(--ink); }
+.assessment-workbook-import .card-body { display: grid; gap: 18px; }
+.assessment-workbook-import-form { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--border); border-radius: 6px; background: #f8fafd; }
+.assessment-workbook-import-form .form-check { margin: 0; }
+.assessment-workbook-import-form .btn { justify-self: start; }
 .review-submission { margin-top: 24px; }
 .review-submission fieldset { min-width: 0; }
 .review-submission legend { float: none; font-size: 1.25rem; font-weight: 600; color: var(--ink); }

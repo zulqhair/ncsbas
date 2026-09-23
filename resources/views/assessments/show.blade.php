@@ -65,10 +65,23 @@
     @endif
     <div class="notice alert alert-info"><x-icon :name="$canEdit ? 'info' : 'lock'" /><div>
         @if(! $hasDetails)<strong>Add assessment details before you begin.</strong><p class="mb-0">Use the Assessment details button to add the organisation, scope, or other context for this assessment. The questionnaire will unlock after you save a detail.</p>
-        @elseif($canEdit)<strong>Work through each element in sequence.</strong><p class="mb-0">Selecting <strong>No</strong> skips the remaining questions in that element. Save your draft before submitting it for review.</p>
+        @elseif($canEdit)<strong>Answer in the system or import your completed NCSB workbook.</strong><p class="mb-0">Selecting <strong>No</strong> skips the remaining questions in that element. An imported workbook replaces the current draft responses.</p>
         @else<strong>This assessment is read only.</strong><p class="mb-0">{{ $assessment->status === 'draft' ? 'Only the assessor or an administrator can edit this draft.' : 'Responses are locked after submission. You can view the answers, review comments, and download the report.' }}</p>@endif
     </div></div>
     @if($hasDetails)
+    @if($canEdit)
+        <section class="card assessment-workbook-import mb-4" aria-labelledby="workbook-import-heading">
+            <div class="card-body">
+                <div><p class="eyebrow">NCSB v1.1 workbook</p><h2 class="h4" id="workbook-import-heading">Import completed workbook</h2><p class="text-secondary mb-0">Upload the official NACSA .xlsx template. NCSBAS validates the responses and recalculates results using the same scoring rules as manual entry.</p></div>
+                <form method="POST" action="{{ route('assessments.import', $assessment) }}" enctype="multipart/form-data" class="assessment-workbook-import-form" data-loading-form>
+                    @csrf
+                    <div><label class="form-label" for="workbook">Completed NCSB workbook</label><input class="form-control @error('workbook') is-invalid @enderror" id="workbook" name="workbook" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>@error('workbook')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                    <div class="form-check"><input class="form-check-input @error('replace_answers') is-invalid @enderror" id="replace_answers" name="replace_answers" type="checkbox" value="1" @checked(old('replace_answers')) required><label class="form-check-label" for="replace_answers">I understand this replaces all answers currently saved in this draft.</label>@error('replace_answers')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                    <button class="btn btn-outline-primary" type="submit" data-loading-label="Importing workbookâ€¦"><x-icon name="document" /> Import and recalculate</button>
+                </form>
+            </div>
+        </section>
+    @endif
     <div class="assessment-layout">
         <aside class="element-navigation">
             <details open><summary>Assessment elements <span class="text-secondary">({{ $elements->count() }})</span></summary>

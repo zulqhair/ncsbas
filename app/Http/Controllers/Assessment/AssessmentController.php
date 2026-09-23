@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Assessment;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ImportNcsbWorkbookRequest;
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
 use App\Models\NcsbQuestion;
 use App\Models\User;
 use App\Services\NcsbScoringService;
+use App\Services\NcsbWorkbookImportService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 
 class AssessmentController extends Controller
 {
@@ -149,5 +153,20 @@ class AssessmentController extends Controller
         app(NcsbScoringService::class)->calculate($assessment);
 
         return back()->with('status', 'Draft saved and results recalculated.');
+    }
+
+    public function import(
+        ImportNcsbWorkbookRequest $request,
+        Assessment $assessment,
+        NcsbWorkbookImportService $workbookImportService,
+    ): RedirectResponse {
+        /** @var UploadedFile $workbook */
+        $workbook = $request->file('workbook');
+        $importedResponses = $workbookImportService->import($assessment, $workbook);
+
+        return back()->with(
+            'status',
+            "Workbook imported. {$importedResponses} response(s) replaced and results recalculated.",
+        );
     }
 }

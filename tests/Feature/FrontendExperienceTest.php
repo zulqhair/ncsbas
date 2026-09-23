@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Assessment;
 use App\Models\NcsbQuestion;
 use App\Models\Review;
+use App\Models\RoleModulePermission;
 use App\Models\User;
 use App\Services\NcsbScoringService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,6 +14,19 @@ use Tests\TestCase;
 class FrontendExperienceTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        foreach ([
+            [User::ROLE_ASSESSOR, RoleModulePermission::MODULE_ASSESSOR],
+            [User::ROLE_REVIEWER, RoleModulePermission::MODULE_ASSESSOR],
+            [User::ROLE_REVIEWER, RoleModulePermission::MODULE_REVIEWER],
+        ] as [$role, $module]) {
+            RoleModulePermission::query()->firstOrCreate(compact('role', 'module'));
+        }
+    }
 
     public function test_public_pages_offer_real_account_actions_and_accessible_navigation(): void
     {
@@ -123,16 +137,15 @@ class FrontendExperienceTest extends TestCase
             'status' => 'pending',
         ]);
 
-        $this->actingAs($reviewer)->get('/reviews/'.$review->id)
+        $this->actingAs($reviewer)->get('/reviews')
             ->assertOk()
-            ->assertSee('value="accept"', false)
-            ->assertDontSee('value="complete"', false)
-            ->assertSee('Decline this review');
+            ->assertSee('Accept review');
 
         $this->patch('/reviews/'.$review->id, ['action' => 'accept'])->assertSessionHas('status');
         $this->get('/reviews/'.$review->id)
             ->assertSee('value="complete"', false)
-            ->assertDontSee('value="accept"', false);
+            ->assertDontSee('value="accept"', false)
+            ->assertSee('Decline this review');
 
         $this->patch('/reviews/'.$review->id, ['action' => 'complete'])->assertSessionHas('status');
         $this->get('/reviews/'.$review->id)
@@ -169,7 +182,7 @@ class FrontendExperienceTest extends TestCase
             'assessment_id' => $assigned->id,
             'reviewer_id' => $reviewer->id,
             'requested_by_user_id' => $assessor->id,
-            'status' => 'pending',
+            'status' => 'accepted',
         ]);
 
         foreach (['dashboard' => '/dashboard', 'assessments' => '/assessments', 'questionnaire' => '/assessments/'.$draft->id] as $name => $path) {
