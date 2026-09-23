@@ -32,12 +32,15 @@
                     <div class="nav-links">
                         @auth
                             <a href="{{ route('dashboard') }}" @if(request()->routeIs('dashboard')) aria-current="page" @endif><x-icon name="grid" /> Dashboard</a>
-                            <a href="{{ route('assessments.index') }}" @if(request()->routeIs('assessments.*')) aria-current="page" @endif><x-icon name="document" /> Assessor Module</a>
-                            @if(auth()->user()->isAdmin() || auth()->user()->role === 'reviewer')
+                            @if(auth()->user()->canAccessModule('assessor'))
+                                <a href="{{ route('assessments.index') }}" @if(request()->routeIs('assessments.*')) aria-current="page" @endif><x-icon name="document" /> Assessor Module</a>
+                            @endif
+                            @if(auth()->user()->canAccessModule('reviewer'))
                                 <a href="{{ route('reviews.index') }}" @if(request()->routeIs('reviews.*')) aria-current="page" @endif><x-icon name="review" /> Reviewer Module</a>
                             @endif
                             @if(auth()->user()->isAdmin())
                                 <a href="{{ route('admin.users.index') }}" @if(request()->routeIs('admin.users.*')) aria-current="page" @endif><x-icon name="users" /> User management</a>
+                                <a href="{{ route('admin.module-access.index') }}" @if(request()->routeIs('admin.module-access.*')) aria-current="page" @endif><x-icon name="grid" /> Module access</a>
                             @endif
                         @else
                             <a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif>Overview</a>

@@ -29,6 +29,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === self::ROLE_ADMIN;
     }
 
+    public function canAccessModule(string $module): bool
+    {
+        return $this->isAdmin() || RoleModulePermission::roleCanAccessModule($this->role, $module);
+    }
+
     public function assessments(): HasMany
     {
         return $this->hasMany(Assessment::class);

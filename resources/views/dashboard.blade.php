@@ -4,9 +4,9 @@
     <section class="hero-panel dashboard-intro" aria-labelledby="dashboard-heading">
         <div><p class="eyebrow">Dashboard · NCSB v1.1</p><h1 id="dashboard-heading">{{ $roleTitle }}</h1><p>Assessment activity and NCSB maturity at a glance.</p></div>
         <div class="hero-actions">
-            @if(auth()->user()->isAdmin() || auth()->user()->role === 'assessor')
+            @if(auth()->user()->canAccessModule('assessor') && (auth()->user()->isAdmin() || auth()->user()->role === 'assessor'))
                 <form method="POST" action="{{ route('assessments.create') }}" data-loading-form>@csrf<button class="btn btn-light" type="submit" data-loading-label="Creating draft…"><x-icon name="plus" /> New assessment</button></form>
-            @else
+            @elseif(auth()->user()->canAccessModule('reviewer'))
                 <a class="btn btn-light" href="{{ route('reviews.index') }}">View assignments <x-icon name="arrow" /></a>
             @endif
         </div>
@@ -18,7 +18,7 @@
         <div class="metric"><dt>Average score</dt><dd>{{ $summary['average'] !== null ? number_format($summary['average'] * 100, 1).'%' : '—' }}<span class="metric-caption">Across scored assessments</span></dd></div>
     </dl>
     @if($assessments->isEmpty())
-        <div class="card empty-state"><x-icon name="document" size="36" /><h2>No assessments to display yet</h2><p>{{ auth()->user()->role === 'reviewer' ? 'Your dashboard will update when an assessment is assigned to you.' : 'Create an assessment to start building your cyber security baseline.' }}</p></div>
+        <div class="card empty-state"><x-icon name="document" size="36" /><h2>No assessments to display yet</h2><p>@if(! auth()->user()->canAccessModule('assessor') && ! auth()->user()->canAccessModule('reviewer')) Your administrator has not granted access to any modules. @elseif(auth()->user()->role === 'reviewer') Your dashboard will update when an assessment is assigned to you. @else Create an assessment to start building your cyber security baseline. @endif</p></div>
     @else
         <div class="section-heading"><div><p class="eyebrow">Assessment intelligence</p><h2 class="mb-0">Your baseline at a glance</h2></div></div>
         <div class="row g-4 mb-4">

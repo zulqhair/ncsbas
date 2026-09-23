@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureUserCanAccessModule;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Foundation\Application;
@@ -15,7 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(SecurityHeadersMiddleware::class);
-        $middleware->alias(['admin' => EnsureUserIsAdmin::class]);
+        $middleware->alias([
+            'admin' => EnsureUserIsAdmin::class,
+            'module' => EnsureUserCanAccessModule::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

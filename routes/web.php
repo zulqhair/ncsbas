@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ModulePermissionController;
 use App\Http\Controllers\Admin\UserRoleController;
 use App\Http\Controllers\Assessment\AssessmentController;
 use App\Http\Controllers\Assessment\AssessmentReportController;
@@ -63,38 +64,47 @@ Route::middleware('auth')->group(function (): void {
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
-    Route::get('/assessments', [AssessmentController::class, 'index'])
-        ->name('assessments.index');
-    Route::post('/assessments', [AssessmentController::class, 'create'])
-        ->middleware('throttle:sensitive')
-        ->name('assessments.create');
-    Route::get('/assessments/{assessment}', [AssessmentController::class, 'show'])
-        ->name('assessments.show');
-    Route::put('/assessments/{assessment}', [AssessmentController::class, 'save'])
-        ->middleware('throttle:sensitive')
-        ->name('assessments.save');
-    Route::get('/assessments/{assessment}/report', [AssessmentReportController::class, 'download'])
-        ->name('assessments.report');
-    Route::post('/assessments/{assessment}/reviews', [ReviewController::class, 'request'])
-        ->middleware('throttle:sensitive')
-        ->name('reviews.request');
-    Route::get('/reviews', [ReviewController::class, 'index'])
-        ->name('reviews.index');
-    Route::get('/reviews/{review}/responses', [ReviewController::class, 'responses'])
-        ->name('reviews.responses');
-    Route::get('/reviews/{review}', [ReviewController::class, 'show'])
-        ->name('reviews.show');
-    Route::patch('/reviews/{review}', [ReviewController::class, 'update'])
-        ->middleware('throttle:sensitive')
-        ->name('reviews.update');
-    Route::post('/reviews/{review}/comments', [ReviewController::class, 'comment'])
-        ->middleware('throttle:sensitive')
-        ->name('reviews.comments');
+    Route::middleware('module:assessor')->group(function (): void {
+        Route::get('/assessments', [AssessmentController::class, 'index'])
+            ->name('assessments.index');
+        Route::post('/assessments', [AssessmentController::class, 'create'])
+            ->middleware('throttle:sensitive')
+            ->name('assessments.create');
+        Route::get('/assessments/{assessment}', [AssessmentController::class, 'show'])
+            ->name('assessments.show');
+        Route::put('/assessments/{assessment}', [AssessmentController::class, 'save'])
+            ->middleware('throttle:sensitive')
+            ->name('assessments.save');
+        Route::get('/assessments/{assessment}/report', [AssessmentReportController::class, 'download'])
+            ->name('assessments.report');
+        Route::post('/assessments/{assessment}/reviews', [ReviewController::class, 'request'])
+            ->middleware('throttle:sensitive')
+            ->name('reviews.request');
+    });
+    Route::middleware('module:reviewer')->group(function (): void {
+        Route::get('/reviews', [ReviewController::class, 'index'])
+            ->name('reviews.index');
+        Route::get('/reviews/{review}/responses', [ReviewController::class, 'responses'])
+            ->name('reviews.responses');
+        Route::get('/reviews/{review}', [ReviewController::class, 'show'])
+            ->name('reviews.show');
+        Route::patch('/reviews/{review}', [ReviewController::class, 'update'])
+            ->middleware('throttle:sensitive')
+            ->name('reviews.update');
+        Route::post('/reviews/{review}/comments', [ReviewController::class, 'comment'])
+            ->middleware('throttle:sensitive')
+            ->name('reviews.comments');
+    });
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/users', [UserRoleController::class, 'index'])
             ->name('users.index');
         Route::patch('/users/{user}/role', [UserRoleController::class, 'update'])
             ->middleware('throttle:sensitive')
             ->name('users.role.update');
+        Route::get('/module-access', [ModulePermissionController::class, 'index'])
+            ->name('module-access.index');
+        Route::put('/module-access', [ModulePermissionController::class, 'update'])
+            ->middleware('throttle:sensitive')
+            ->name('module-access.update');
     });
 });

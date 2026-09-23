@@ -4,9 +4,11 @@
     <a class="breadcrumb-link" href="{{ route('reviews.index') }}"><x-icon name="back" size="16" /> Reviewer Module</a>
     <div class="page-heading">
         <div><p class="eyebrow">Review workspace</p><h1>Review Assessment #{{ $assessment->id }}</h1><p>Assessor: {{ $assessment->user->name }} <span class="mx-2" aria-hidden="true">/</span> <x-status-badge :status="$review->status" /></p></div>
-        <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-outline-primary" href="{{ route('assessments.report', $assessment) }}"><x-icon name="download" /> Download PDF</a>
-        </div>
+        @if(auth()->user()->canAccessModule('assessor'))
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-outline-primary" href="{{ route('assessments.report', $assessment) }}"><x-icon name="download" /> Download PDF</a>
+            </div>
+        @endif
     </div>
     <dl class="metrics metrics-two">
         <div class="metric"><dt>Overall score</dt><dd>{{ $assessment->overall_score !== null ? number_format($assessment->overall_score * 100, 1).'%' : 'Not calculated' }}</dd></div>

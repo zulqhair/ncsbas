@@ -15,7 +15,6 @@ class ReviewController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        abort_unless($user->isAdmin() || $user->role === User::ROLE_REVIEWER, 403);
 
         $reviews = Review::query()
             ->when(
