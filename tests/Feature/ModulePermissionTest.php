@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Assessment;
+use App\Models\Review;
 use App\Models\RoleModulePermission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,6 +43,26 @@ class ModulePermissionTest extends TestCase
         $this->actingAs($assessor)
             ->get('/admin/module-access')
             ->assertForbidden();
+    }
+
+    public function test_assessor_module_only_lists_assessments_created_by_the_authenticated_user(): void
+    {
+        $reviewer = User::factory()->create(['role' => User::ROLE_REVIEWER]);
+        $otherUser = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
+        $ownAssessment = Assessment::create(['user_id' => $reviewer->id]);
+        $assignedAssessment = Assessment::create(['user_id' => $otherUser->id]);
+        Review::create([
+            'assessment_id' => $assignedAssessment->id,
+            'reviewer_id' => $reviewer->id,
+            'requested_by_user_id' => $otherUser->id,
+            'status' => 'accepted',
+        ]);
+
+        $this->actingAs($reviewer)
+            ->get('/assessments')
+            ->assertOk()
+            ->assertSee(route('assessments.show', $ownAssessment), false)
+            ->assertDontSee(route('assessments.show', $assignedAssessment), false);
     }
 
     public function test_an_administrator_can_configure_module_access_by_role(): void

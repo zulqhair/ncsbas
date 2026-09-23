@@ -8,14 +8,14 @@
             <div class="empty-state"><x-icon name="review" size="36" /><h2>No review assignments are available.</h2><p>Assessments will appear here when they are assigned for review.</p></div>
         @else
             <div class="table-responsive" role="region" aria-label="Review assignments" tabindex="0">
-                <table class="table align-middle"><thead><tr><th scope="col">Assessment</th><th scope="col">Assessor</th><th scope="col">Reviewer</th><th scope="col">Status</th><th scope="col">Overall maturity</th><th scope="col">Updated</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead><tbody>
+                <table class="table align-middle"><thead><tr><th scope="col">No.</th><th scope="col">Assessor</th><th scope="col">Reviewer</th><th scope="col">Status</th><th scope="col">Overall maturity</th><th scope="col">Updated</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead><tbody>
                     @foreach($reviews as $review)
                         <tr>
                             <td>
                                 @if($review->status === 'pending' && ! auth()->user()->isAdmin())
-                                    #{{ $review->assessment->id }}
+                                    {{ $loop->iteration }}
                                 @else
-                                    <a class="table-link" href="{{ route('reviews.show', $review) }}">#{{ $review->assessment->id }}</a>
+                                    <a class="table-link" href="{{ route('reviews.show', $review) }}">{{ $loop->iteration }}</a>
                                 @endif
                             </td>
                             <td>{{ $review->assessment->user->name }}</td>
@@ -29,10 +29,10 @@
                                         @csrf
                                         @method('PATCH')
                                         <input type="hidden" name="action" value="accept">
-                                        <button class="btn btn-sm btn-primary text-nowrap" type="submit" data-loading-label="Accepting…" aria-label="Accept review for assessment {{ $review->assessment->id }}"><x-icon name="check" size="16" /> Accept review</button>
+                                        <button class="btn btn-sm btn-primary text-nowrap" type="submit" data-loading-label="Accepting…" aria-label="Accept review for assessment {{ $loop->iteration }}"><x-icon name="check" size="16" /> Accept review</button>
                                     </form>
                                 @else
-                                    <a class="btn btn-sm btn-outline-primary text-nowrap" href="{{ route('reviews.show', $review) }}" aria-label="Open review for assessment {{ $review->assessment->id }}">Open review <x-icon name="arrow" size="16" /></a>
+                                    <a class="btn btn-sm btn-outline-primary text-nowrap" href="{{ route('reviews.show', $review) }}" aria-label="Open review for assessment {{ $loop->iteration }}">Open review <x-icon name="arrow" size="16" /></a>
                                 @endif
                             </td>
                         </tr>

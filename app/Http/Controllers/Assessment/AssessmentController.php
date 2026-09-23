@@ -14,20 +14,7 @@ class AssessmentController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-        if ($user->isAdmin()) {
-            $assessments = Assessment::with('user')->latest()->get();
-        } elseif ($user->role === 'reviewer') {
-            $assessments = Assessment::whereHas(
-                'reviews',
-                fn ($query) => $query
-                    ->where('reviewer_id', $user->id)
-                    ->whereIn('status', ['accepted', 'completed'])
-            )
-                ->with('user')->latest()->get();
-        } else {
-            $assessments = $user->assessments()->latest()->get();
-        }
+        $assessments = $request->user()->assessments()->latest()->get();
 
         return view('assessments.index', compact('assessments'));
     }
