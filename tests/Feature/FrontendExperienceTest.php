@@ -28,7 +28,7 @@ class FrontendExperienceTest extends TestCase
         $this->get('/register')->assertOk()->assertSee('New accounts are registered as Assessors.');
     }
 
-    public function test_dashboard_provides_textual_chart_values_for_the_current_users_assessments(): void
+    public function test_dashboard_displays_charts_for_the_current_users_assessments(): void
     {
         $assessor = User::factory()->create(['role' => User::ROLE_ASSESSOR]);
         Assessment::create([
@@ -40,10 +40,12 @@ class FrontendExperienceTest extends TestCase
 
         $this->actingAs($assessor)->get('/dashboard')
             ->assertOk()
-            ->assertSee('View status data')
-            ->assertSee('View all element scores')
-            ->assertSee('50%')
-            ->assertSee('aria-label="Assessment scores"', false)
+            ->assertDontSee('View status data')
+            ->assertDontSee('View maturity data')
+            ->assertDontSee('View assessment score data')
+            ->assertDontSee('View all element scores')
+            ->assertSee('50.0%')
+            ->assertSee('id="assessmentScoresChart"', false)
             ->assertDontSee('No assessments to display yet');
     }
 
